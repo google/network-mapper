@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% comment %}
+
+This is the primary template file for the network x visualizer.
+
+It's a 'single-page' UI which wraps the stand-alone graph viewer templates
+with administrative functionality.
+
+{% endcomment %}
+{% load url from future %}
+
+{% block extra_js %}
+  require(['cs!netx']);
+  var HOSTNAME = '{{ hostname }}';
+  var GRAPH_ID = {% if graph_id %}{{ graph_id }}{% else %}null{% endif %};
+  {% autoescape off %}
+  var INIT_JSON_DATA = {{ json_data }};
+  {% endautoescape %}
+{% endblock %}
+
+{% block nav %}
+<div class="topbar">
+  <a class="title" href="/">Network Visualizer X</a>
+  <span id="view-name">{{ graph.name }}</span>
+  <span id="links">
+    {% if google_user %}
+      <span class="navbar-text">{{ google_user.email }}</span> |
+      <a href="{% url 'oauth2logout' %}">Logout</a> |
+      <a id="link-help" href="{% url 'help' %}">Help</a>
+    {% endif %}
+  </span>
+</div>
+{% endblock %}  {# end |nav| #}
+
+{% comment %}
+{% block sidebar %}
+{% if google_user %}
+<div id="sidebar">
+  <div id="sidebar-content">
+  </div>
+</div>
+{% endif %}
+{% endblock %}  {# end |sidebar| #}
+
+{% endcomment %}
+
+{% block content %}
+{% if google_user %}
+<form id="vis-form" class="vis-form" method="post">
+  {% csrf_token %}
+
+{% comment %}
+This is the actual visualization viewport. The stand-alone graph is rendered
+within a graph. Formctionality relating specifically to interacting with
+individual nodes, edges, etc. will be self-contained within the IFRAME with
+a handful of external parameters available. Formctionality relating to
+interacting with the overall visualization entries-list and aggregate info
+will remain outside the IFRAME in the scope of this UI.
+{% endcomment %}
+
+<div id="view" style="{% if not graph %}display: none{% endif %}">
+  {# When there is no visualization, display the list and count. #}
+  {% if graph %}
+    {% include "graph/graph_detail.html" %}
+  {% else %}
+    <div class="faded-counter">{{ graphs_count }}</div>
+  {% endif %}
+</div>
+
+<div id="view-loading" style="display:none">Loading...</div>
+
+{# List of all visualizations as a clickable entry. #}
+<div id="vis-index" style="{% if graph %}display: none{% endif %}">
+  {% if graphs %}{% for graph in graphs %}
+  <div id="v-{{ graph.key.id }}"
+       class="vis-entry
+       {% if graph_id and graph_id == graph.key.id %}selected{% endif%}">
+    <div class="vis-entry-name">
+      {{ graph.name }}
+    </div>
+  </div>
+  {% endfor %}{% endif %}
+  <a id="btn-create" class="vis-entry create">+</a>
+</div>
+
+<div id="vis-form-panel" style="display:none" class="hidden">
+  <input type="text" name="name" id="input_name" placeholder="Visualization Title"></input>
+  <input type="text" name="spreadsheet_link" id="input_url" placeholder="Spreadsheet URL"></input>
+  <br>
+  <div id="publicity_control">
+  Publically viewable? <input type="checkbox" name="is_public" id="input_public"></input>
+  </div>
+  <input type="hidden" id="input_id" name="graph_id"></input>
+  <button id="btn-save" class="btn red">Save</button>
+</div>
+
+{# Actions panel which is only visible when a visualization is open. #}
+<div id="vis-actions" {% if not graph_id %}style="display: none"{% endif %}>
+  <button id="btn-back" class="action"></button>
+
+  <div id="vis-view-mode">
+    <button id="btn-edit" class="action"></button>
+    <button id="btn-refresh" class="action"></button>
+    <button id="btn-save-positions" class="action"></button>
+    <button id="btn-embed" class="action"></button>
+  </div>
+
+  <span id="tooltip" class="hidden"></span>
+
+  <textarea id="snippet" class="hidden" readonly>N/A</textarea>
+</div>
+
+</form>
+
+<div id="help" class="hidden no-hover">
+  {% include "help.html" %}
+</div>
+
+{% else %}  {# no |google_user| #}
+
+<div class="intro">
+  <h2>What is Network Visualizer X?</h2>
+  <div class="text small center">
+    <p>A tool that makes it simple for NGOs to
+    generate visualizations of networks of support.
+    It can also be used to create network graphs for other types of data.</p>
+    <p>To get started, login with your google account.</p>
+  </div>
+  <a class="btn red" href="{% url 'login' %}">Login</a>
+</div>
+
+{% endif %}  {# end |google_user| #}
+
+<div id="butterbar-container">
+<div id="butterbar" class="hidden">
+  <span id="butterbar-text"></span>
+  <a id="butterbar-dismiss" class="hidden" href="javascript:void();">dismiss</a>
+</div>
+</div>
+
+{% endblock %}  {# end |content| #}

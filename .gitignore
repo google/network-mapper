@@ -1,0 +1,11 @@
+*~
+*.pyc
+*.swo
+*.swp
+*.swl
+*.swn
+*.swm
+*.bak
+networkx-d3-v2/networkx/conf/google
+networkx-d3-v2/networkx/conf/dev.py
+.DS_Store

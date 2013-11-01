@@ -1,0 +1,50 @@
+{%  extends 'base.html' %}
+{% load url from future %}
+
+{% block breadcrumb %}
+<li><a href="{% url 'homepage' %}">Home</a> <span class="divider">/</span></li>
+<li><a href="{% url 'graph_detail' graph_id %}">{{ graph.name }}</a> <span class="divider">/</span></li>
+<li class="active">visualization log</li>
+{% endblock %}
+
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+
+{% block page_title %}{{ page_title }}{%  endblock %}
+
+{% block content %}
+  <p><strong>Last update</strong>: {{ graph.last_updated }}</p>
+  {% if error_log %}
+    {%  for error in error_log %}
+      <div class="alert alert-error">
+        {% if error.node %}
+          <h4>Node - row {{ error.node.row }}</h4>
+          {% if error.node.errors.items %}
+            <div>
+              {% for field, error_list in error.node.errors.items %}
+                <strong>{{ field }}:</strong>
+                <ul>
+                  {% for error in error_list  %}
+                    <li>{{ error }}</li>
+                  {% endfor %}
+                </ul>
+              {% endfor %}
+            </div>
+          {%  endif %}
+        {% elif error.graph %}
+          <h4>Visualization</h4>
+          <div>
+            <ul>
+              {% for error in error.graph.errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {%  endif %}
+      </div>
+    {% endfor %}
+  {%  else %}
+    <div class="alert alert-info">
+      The visualization was successfully updated
+    </div>
+  {%  endif %}
+{% endblock %}

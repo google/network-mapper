@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{% block title %}Network Visualizer X{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/graph.css" media="all" />
+    <style>
+      {% block extra_css %}
+      {% endblock %}
+    </style>
+    <script src="{{ STATIC_URL }}js/vendor/require.js"></script>
+    <script src="{{ STATIC_URL }}js/conf/main.js"></script>
+    <script>
+      require(['base']);
+      {% block extra_js %}{% endblock %}
+    </script>
+    {% block coffee %}
+    {% endblock %}
+  </head>
+  <body {% block body_attributes %}{% endblock %} class="marginless">
+  {% block container %}
+  {% endblock %}
+  </body>
+</html>

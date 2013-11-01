@@ -1,0 +1,94 @@
+{%  extends 'base.html' %}
+{% load url from future %}
+
+{% block content %}
+<div id="help-text">
+ <h2>Quick start</h2>
+ <ol>
+      <li>Open this <a target="_blank" href="https://docs.google.com/spreadsheet/ccc?key=0AiRkpvvjcIQrdG1vSWlWRTRhY21OU1FGNHkwUDlUUGc#gid=0">example spreadsheet</a>.</li>
+      <li>Copy to your Google Drive by selecting <strong>"File" > "Make a copy..."</strong>.</li>
+      <li>Fill in your own data.</li>
+      <li>Create your visualization!
+      Give it a name, then paste in its URL.</li>
+  </ol>
+ <h3 class="ruled">Overview</h3>
+ <p>NetworkX Visualiser uses a Google Spreadsheet as a datastore, allowing you to customize your data set, its associated meta data and the visual appearance of the nodes and labels. The spreadsheet has 3 tabs: <strong>NODES</strong>, <strong>CATEGORIES</strong> and <strong>STYLES</strong>.</p>
+ <p>NODES is where data points and associated meta data is defined. CATEGORIES is a list of category names that you want to associate with your nodes, as well as a style class name for each category node and label. STYLES is a custom stylesheet where you can customize the appearance of your nodes and labels.</p>
+ <h3 class="ruled">Data types</h3>
+ <p>List of supported data types and how they should be used.<p>
+  <table class="help-table">
+    <colgroup>
+        <col class="span1">
+        <col class="span7">
+    </colgroup>
+    <thead>
+    <tr>
+        <th>Column</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td><code>NAME</code></td>
+        <td>The name of your node. A node is a single data point with some associated meta data.</td>
+    </tr>
+    <tr>
+        <td><code>CATEGORIES</code></td>
+        <td>One or more categories for your node. Nodes are connected by category. Categories may be defined in the <code>CATEGORIES</code> tab of the spreadsheet where they can be given a style class which determines their visual appearance. See <a href="#styling">Customizing styles</a> section below.</td>
+    </tr>
+    <tr>
+        <td><code>IMPORTANCE</code></td>
+        <td>The relative importance of your node. A larger value will result in a larger node radius.</td>
+    </tr>
+    <tr>
+        <td><code>SHORT DESCRIPTION</code></td>
+        <td>An introductory paragraph or abstract that will appear in the popup when clicking on a node.</td>
+    </tr>
+    <tr>
+        <td><code>LONG DESCRIPTION</code></td>
+        <td>The main body of text that will appear in the popup when clicking on a node.</td>
+    </tr>
+    <tr>
+        <td><code>CONTEXT URL</code></td>
+        <td>A link to an external website that will appear below the long description in the popup when clicking a node. Note: Valid YouTube URLs will automatically be rendered into a YouTube video player.</td>
+    </tr>
+    <tr>
+        <td><code>CREDIT</code></td>
+        <td>The name of a person or source for the current node data.</td>
+    </tr>
+    <tr>
+        <td><code>NODE-STYLE</code></td>
+        <td>A class name that provides styling information for your node. See <a href="#styling">Customizing styles</a> section below.</td>
+    </tr>
+    <tr>
+        <td><code>LABEL-STYLE</code></td>
+        <td>Note: there is a special class called <code>always-shown-label</code> which allows you to control whether or not node labels are automatically hidden. This can be provided in addition to other classes as a mixin e.g. <code>your-custom-class always-shown-label</code> will render the node label with your own class but make sure the label is not automatically hidden.</td>
+    </tr>
+    </tbody>
+  </table>
+ <h3 id="styling" class="ruled">Customizing styles</h3>
+ <table class="table table-bordered table-striped">
+    <colgroup>
+        <col class="span1">
+        <col class="span7">
+    </colgroup>
+    <thead>
+    <tr>
+        <th>Column</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td><code>CLASSNAME</code></td>
+        <td>A name for your style class. This can be entered into any of the <code>NODE-STYLE</code> or <code>LABEL-STYLE</code> columns to give your data point a custom appearance.</td>
+    </tr>
+    <tr>
+        <td><code>STYLES</code></td>
+        <td>A list of semicolon-delimited style attributes. Network Visualizer X uses D3.js and supports SVG style properties. Some examples are provided in the <a target="_blank" href="https://docs.google.com/spreadsheet/ccc?key=0AiRkpvvjcIQrdHBLbWtwTDJWVUtka0l3RWRnVzFqbHc#gid=0">sample spreadsheet</a>.</td>
+    </tr>
+    </tbody>
+  </table>
+ <p>
+ </div>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{% block title %}Network Visualizer X{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/netxui.css" media="all" />
+
+    <script src="{{ STATIC_URL }}js/vendor/require.js"></script>
+    <script src="{{ STATIC_URL }}js/conf/main.js"></script>
+    <style>
+      {% block extra_css %}
+      {% endblock %}
+    </style>
+    <script>
+      {% block extra_js %}
+      {% endblock %}
+    </script>
+    <script src="{{ STATIC_URL }}js/conf/main.js"></script>
+  </head>
+  <body {% block body_attributes %}{% endblock %}>
+
+  {% block nav %}
+  {% endblock %}
+
+  {% block sidebar %}
+  {% endblock %}
+
+  {% for message in messages %}
+  <div{% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %}>
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+    {{ message }}
+  </div>
+  {% endfor %}
+
+  {% block content %}
+  <div id="btnbar">
+    {% block button_bar %}
+    {% endblock %}
+  </div>
+  {% endblock %}
+
+  </body>
+</html>
