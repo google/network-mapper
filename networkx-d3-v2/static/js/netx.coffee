@@ -91,6 +91,8 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
   # Holds state about the edit/create visualization form.
   class VisForm
+    @CREATE_URL: '/create/'  # The trailing slash is important.
+
     constructor: (@view)->
       @$form = $ '#vis-form-panel'
       @$formData = $ '#vis-form'
@@ -101,6 +103,8 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       @$publicInput = $ '#input_public'
       @$IDinput = $ '#input_id'
       @$save = $ '#btn-save'
+      @$delete = $ '#btn-delete'
+
     show: () ->
       fadeShow @$form
       @$nameInput.focus()
@@ -114,11 +118,13 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
           vis.url)
       @$publicInput[0].checked = vis.isPublic
       @$IDinput.val vis.id    # ID must be set for delete requests.
+      @$delete.show()
     clearForm: ->
       @$nameInput.val ''
       @$spreadsheetInput.val ''
       @$publicInput.checked = false
       @$IDinput.val ''
+      @$delete.hide()
 
     saveOrCreate: () ->
       # TODO(keroserene): Pre-validate spreadsheet url/format?
@@ -140,8 +146,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     ###
     createVis: () ->
       data = @$formData.serialize()
-      # The trailing slash in /graph/create/ is important.
-      $.post '/graph/create/', data, () ->
+      $.post VisForm.CREATE_URL, data, () ->
         # gButter.show('Finished creation.')
         console.log 'created!'
         # setTimeout(refreshEntries, 100)
@@ -166,7 +171,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       oldID = vis.id
       # Trailing slash is vital.
       data = @$formData.serialize()
-      $.post '/graph/' + vis.id + '/update/', data, =>
+      $.post '/update/' + vis.id, data, =>
         gButter.show('Update complete.')
         console.log 'updated'
         # Refresh if spreadsheet changed and still viewing current graph.
@@ -182,6 +187,12 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         @view.$name.html newName
       gButter.show('Updating details...', false)
       true
+
+    deleteVis: (vis) ->
+      data = @$formData.serialize()
+      id = vis.id
+      $.post '/delete/' + vis.id, data, =>
+        console.log 'deleted ' + id
 
 
   # State-holding class for NetworkX primary viewport.
@@ -451,11 +462,16 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     if VIS_ID
       gView.show VIS_ID
 
-    ###
     # Primary button handlers.
     # The "save" button switches innerHTML between "Save" and "Create"
     # depending on if the opened dialogue is an edit or a new visualization.
-    $('#btn-delete').click(deleteGraph);
+    gForm.$delete.click (e) ->
+      e.preventDefault()
+      vis = gIndex.visByID[gView.currentID]
+      gForm.deleteVis(vis)
+      returnToIndex()
+
+    ###
     $('#btn-embed').click(toggleEmbedLink);
     # Tooltips.
     $('#btn-refresh').hover(
