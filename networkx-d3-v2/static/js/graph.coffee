@@ -29,12 +29,17 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       not (b1.left >= b2.right or b1.top >= b2.bottom or
            b1.right < b2.left  or b1.bottom < b2.top)
 
+  showInvalid = ->
+
   ###
   Description and state-holder for a single Graph visualization.
   This is mostly a wrapper around a d3 force layout.
   ###
   class Graph
     constructor: (options) ->
+      # Build a new visualization.
+      # |options| is expected to contain an id.
+
       [@width, @height] = [options.width, options.height]
       # @height = options.height
       @minScale = 0.5
@@ -72,7 +77,6 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
           .attr('width', @width)
           .attr('height', @height)
       @$svg = @svg[0][0]
-      # @url = options.url
       @id = options.id
       @links = undefined
       @nodes = undefined
@@ -108,7 +112,12 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
 
       # Fetch the actual visualization JSON data.
       url = '/data/' + @id
-      d3.json url, (json) =>
+      d3.json url, (error, json) =>
+        if error or null is json
+          console.log 'Visualization does not exist.'
+          $('#invalid').show()
+          @invalid = true
+          return false
         @json = json
         $('#graph-loading').html('')  # TODO(keroserene): Improve loader gfx.
         @setupLinks()
@@ -139,8 +148,8 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
             d.fixed = true
             @nodeInfos[i].isFixed = true
 
-
         @force.start()
+        true
         # End of json success callback.
 
     _.extend(Graph.prototype, Backbone.Events)

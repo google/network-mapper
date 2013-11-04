@@ -221,7 +221,8 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       window.VIS_ID=id  # Hack so that graph.coffee knows what to load.
       @_loadURL('/view/' + id + '/standalone')
       @currentID = id
-      @$name.html @visIndex.visByID[id].name
+      vis = @visIndex.visByID[id]
+      @$name.html vis.name if vis
 
     # Load a url into the AJAX viewport.
     # Requires the target URL to have a div #ajax-view.
@@ -236,7 +237,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
           console.log 'Loading graph js for the first time...'
           require ['cs!graph']
         else
-          window.initVisualization VIS_ID
+          graph = window.initVisualization VIS_ID
       @$view.removeClass('hidden')
       @$view.show()
 
@@ -457,11 +458,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       if e.keyCode is 27
         $back.click()
 
-    # If a specific VIS_ID was specified, automatically open up the
-    # visualization.
-    if VIS_ID
-      gView.show VIS_ID
-
     # Primary button handlers.
     # The "save" button switches innerHTML between "Save" and "Create"
     # depending on if the opened dialogue is an edit or a new visualization.
@@ -496,3 +492,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       });
       $('.label-text', graph).attr('class', 'label-text-dark');
     ###
+
+    # Auto-view visualization if specified in URL.
+    gView.show VIS_ID if VIS_ID

@@ -5,7 +5,3 @@ http://www.aljazeera.com/indepth/interactive/syriadefections/
 
 The subdirectory 'networkx-d3-v2' contains the current (in development) version
 that uses D3 to visualise the network graph.
-
-The subdirectory 'networkx-ft-v1' contains a version that uses
-the fusion-tables network graph visualisation.
-
