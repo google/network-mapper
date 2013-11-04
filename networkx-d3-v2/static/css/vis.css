@@ -28,10 +28,12 @@ div, svg, g {
   pointer-events: none;
 }
 
-#graph-loading {
-  position: fixed; color: #aaa; display: block; width: 100%;
-  font-size: 20px; text-align: center; top: 50%;
-  z-index: 200;
+#vis-loading {
+  position: fixed; display: block; width: 100%; z-index: 200;
+  font-size: 20px; color: #aaa; text-align: center; top: 50%;
+  height: 100px; padding-top: 50px;
+  background: transparent url('../img/spinner.gif') no-repeat center top;
+  pointer-events: none;
 }
 
 /*----------------------------------------------------------------------------*/

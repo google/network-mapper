@@ -30,11 +30,11 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     JSON_DATA_URL = '/data.json'
 
     constructor: ->
-      @newEntryIsPending = false
       @$index = $ '#vis-index'
       @visualizations = []
       @visByID = {}
       @data = null
+      @newEntryIsPending = false
 
     show: -> fadeShow @$index
     hide: -> fadeHide @$index
@@ -219,6 +219,8 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     show: (id) ->
       fadeShow @$loading
       window.VIS_ID=id  # Hack so that graph.coffee knows what to load.
+      return false if not id
+
       @_loadURL('/view/' + id + '/standalone')
       @currentID = id
       vis = @visIndex.visByID[id]
@@ -494,4 +496,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     ###
 
     # Auto-view visualization if specified in URL.
-    gView.show VIS_ID if VIS_ID
+    if VIS_ID
+      gView.show(VIS_ID)
+    else
+      gIndex.show()

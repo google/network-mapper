@@ -50,7 +50,7 @@ will remain outside the IFRAME in the scope of this UI.
 <div id="view-loading" style="display:none">Loading...</div>
 
 {# List of all visualizations as a clickable entry. #}
-<div id="vis-index" style="{% if graph %}display: none{% endif %}">
+<div id="vis-index" style="display: none">
   {% if graphs %}{% for graph in graphs %}
   <div id="v-{{ graph.key.id }}"
        class="vis-entry
@@ -76,7 +76,7 @@ will remain outside the IFRAME in the scope of this UI.
 </div>
 
 {# Actions panel which is only visible when a visualization is open. #}
-<div id="vis-actions" {% if not vis_id %}style="display: none"{% endif %}>
+<div id="vis-actions" style="display: none">
   <button id="btn-back" class="action"></button>
 
   <div id="vis-view-mode">

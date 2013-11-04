@@ -76,6 +76,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
           .attr('id', 'elements')
           .attr('width', @width)
           .attr('height', @height)
+      @$loading = $ '#vis-loading'
       @$svg = @svg[0][0]
       @id = options.id
       @links = undefined
@@ -119,7 +120,8 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
           @invalid = true
           return false
         @json = json
-        $('#graph-loading').html('')  # TODO(keroserene): Improve loader gfx.
+        # TODO(keroserene): Improve loader gfx.
+        @$loading.html('Initializing...')
         @setupLinks()
           .setupNodes()
           .setuptickUpdate()
@@ -149,6 +151,8 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
             @nodeInfos[i].isFixed = true
 
         @force.start()
+        @$loading.html('')
+        @$loading.hide()
         true
         # End of json success callback.
 
