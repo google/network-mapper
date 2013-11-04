@@ -1,0 +1,68 @@
+====================
+Network Visualizer X
+====================
+
+******************************
+Setting up a local environment
+******************************
+
+Network Visualizer X is a self-contained project. To run it you just need
+to install `Google App Engine <https://developers.google.com/appengine/downloads>`_.
+
+This project uses `NDB <https://developers.google.com/appengine/docs/python/ndb/>`_
+for storing information in App Engine's datastore, and
+`Django <https://www.djangoproject.com/>`_ as web framework for handling everything else:
+request process, template rendering, etc.
+
+There are more dependencies included inside `lib` folder.
+
+***************
+OAuth2 Settings
+***************
+
+Network Visualizer X uses `OAuth2 <http://en.wikipedia.org/wiki/OAuth#OAuth_2.0>`_
+to access data from a Google spreadsheet. You'll need to register your application
+with the APIs Console and generate `client_id` and `client_secret` keys. See
+`Using OAuth 2.0 to Access Google APIs <https://developers.google.com/accounts/docs/OAuth2#basicsteps>`_
+
+Once you've generated those keys, add them into `networkx/conf/dev.py`_ (copied from `networkx/conf/dev_template.py`_ )::
+
+    OAUTH_SETTINGS['client_id'] = 'your_client_id'
+    OAUTH_SETTINGS['client_secret'] = 'your_client_secret'
+
+******************
+Running the server
+******************
+
+The process for running the server is the standard one for any Google App Engine
+application. Inside the project folder run::
+
+    $ dev_appserver.py .
+
+And you will have your server running at http://localhost:8080
+
+
+**********
+Test suite
+**********
+
+For running the test suite included within this project, you'll need to install
+the python package `Mock <http://www.voidspace.org.uk/python/mock/>`_. There
+are several options for installing it, but the easiest way is to use
+`easy_install`::
+
+    $ easy_install mock
+
+Once you have mock installed in your system, you can run the test suite just
+by executing::
+
+    $ python manage.py test --settings=networkx.conf.tests auth clients core graph
+
+
+******
+Deploy
+******
+
+For deploying the application, you just need to follow `Google App Engine's
+instructions for deploying applications
+<https://developers.google.com/web-toolkit/doc/latest/tutorial/appengine>`_

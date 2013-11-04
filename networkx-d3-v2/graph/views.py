@@ -123,7 +123,7 @@ class GraphDetailView(_GraphBaseView, TemplateView):
 
 
 class GraphStandaloneView(_GraphBaseView, TemplateView):
-    template_name = "graph/graph_standalone.html"
+  template_name = "graph/graph_standalone.html"
 
 
 class NodeDetail(_GraphBaseView):

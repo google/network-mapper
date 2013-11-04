@@ -6,7 +6,7 @@ keroserene@google.com  (Serene Han)
 
 
 (function() {
-  define(['domReady', 'jQuery', 'underscore'], function(domReady, $, _) {
+  define(['domReady', 'jquery', 'underscore'], function(domReady, $, _) {
     var ButterBar, View, Vis, VisActions, VisForm, VisIndex, fadeHide, fadeShow, gButter;
     gButter = null;
     Vis = (function() {
@@ -107,9 +107,9 @@ keroserene@google.com  (Serene Han)
           viewMode = true;
         }
         if (viewMode) {
-          this.$viewMode.show();
+          fadeShow(this.$viewMode);
         } else {
-          this.$viewMode.hide();
+          fadeHide(this.$viewMode);
         }
         return fadeShow(this.$actions);
       };
@@ -136,7 +136,8 @@ keroserene@google.com  (Serene Han)
       }
 
       VisForm.prototype.show = function() {
-        return fadeShow(this.$form);
+        fadeShow(this.$form);
+        return this.$nameInput.focus();
       };
 
       VisForm.prototype.hide = function() {
@@ -144,7 +145,6 @@ keroserene@google.com  (Serene Han)
       };
 
       VisForm.prototype.prefill = function(vis) {
-        console.log(vis);
         this.$nameInput.val(vis.name);
         this.$spreadsheetInput.val('https://docs.google.com/a/google.com/spreadsheet/ccc?key=' + vis.url);
         this.$publicInput[0].checked = vis.isPublic;
@@ -199,7 +199,7 @@ keroserene@google.com  (Serene Han)
 
 
       VisForm.prototype.updateVis = function(vis) {
-        var data, newName, newSpreadsheet, oldID, oldSpreadsheet, sMatch,
+        var data, newSpreadsheet, oldID, oldSpreadsheet, sMatch,
           _this = this;
         sMatch = this.$spreadsheetInput.val().match(/ccc\?key=(.*)/);
         if (null === sMatch) {
@@ -211,19 +211,21 @@ keroserene@google.com  (Serene Han)
         oldID = vis.id;
         data = this.$formData.serialize();
         $.post('/graph/' + vis.id + '/update/', data, function() {
+          var newName;
+          gButter.show('Update complete.');
           console.log('updated');
           if (newSpreadsheet !== oldSpreadsheet) {
-            return setTimeout(refreshGraph, 100);
+            setTimeout(refreshGraph, 100);
           }
+          newName = _this.$nameInput.val();
+          vis.name = newName;
+          vis.name = newName;
+          vis.entry.find('.vis-entry-name').html(newName);
+          vis.url = newSpreadsheet;
+          vis.isPublic = _this.$publicInput.checked;
+          return _this.view.$name.html(newName);
         });
-        console.log('update!');
-        vis.name = newName;
-        newName = this.$nameInput.val();
-        this.view.$name.html(newName);
-        vis.name = newName;
-        vis.entry.find('.vis-entry-name').html(newName);
-        vis.url = newSpreadsheet;
-        vis.isPublic = this.$publicInput.checked;
+        gButter.show('Updating details...', false);
         return true;
       };
 
@@ -239,10 +241,10 @@ keroserene@google.com  (Serene Han)
 
       EDITING = 2;
 
-      function View(options) {
+      function View(visIndex) {
+        this.visIndex = visIndex;
         this.$view = $('#view');
         this.$loading = $('#view-loading');
-        this.$frame = $('#ajax-view').find('.vis-frame');
         this.currentID = null;
         this.editMode = false;
         this.$name = $('#view-name');
@@ -255,14 +257,15 @@ keroserene@google.com  (Serene Han)
 
       View.prototype.show = function(id) {
         fadeShow(this.$loading);
-        this.loadURL('/graph/' + id);
-        return this.currentID = id;
+        this._loadURL('/view/' + id + '/standalone');
+        this.currentID = id;
+        return this.$name.html(this.visIndex.visByID[id].name);
       };
 
-      View.prototype.loadURL = function(url) {
+      View.prototype._loadURL = function(url) {
         var _this = this;
+        console.log('Loading AJAX: ' + url);
         this.$view.load(url + ' #ajax-view', function() {
-          _this.$frame = $('#ajax-view').find('.vis-frame');
           return _this.$loading.hide();
         });
         this.$view.removeClass('hidden');
@@ -296,7 +299,8 @@ keroserene@google.com  (Serene Han)
         window.addEventListener('popstate', function(e) {
           return _this.show(_this.currentID);
         });
-        return this.currentID = null;
+        this.currentID = null;
+        return this.$name.html('');
       };
 
       return View;
@@ -322,20 +326,19 @@ keroserene@google.com  (Serene Han)
       ButterBar.prototype.show = function(message, autohide) {
         var timeout,
           _this = this;
+        if (autohide == null) {
+          autohide = true;
+        }
         if (!message) {
           return;
         }
         this.reset();
-        if (void 0 === autohide) {
-          autohide = true;
-        }
         this.text.html(message);
         this.bar.removeClass('hidden');
         if (autohide) {
-          timeout = setTimeout(function() {
+          return timeout = setTimeout(function() {
             return _this.bar.addClass('hidden');
-          });
-          return this.TIMEOUT_MS;
+          }, this.TIMEOUT_MS);
         }
       };
 
@@ -366,11 +369,11 @@ keroserene@google.com  (Serene Han)
 
     })();
     return domReady(function() {
-      var $back, $edit, $tt, $visEntries, gActions, gForm, gIndex, gView, hideTooltip, hookTooltip, returnToIndex, showTooltip;
+      var $back, $edit, $embed, $refresh, $saveNodes, $tt, $visEntries, gActions, gForm, gIndex, gView, hideTooltip, hookTooltip, returnToIndex, showTooltip;
       gButter = new ButterBar();
       gActions = new VisActions();
-      gView = new View(gActions);
       gIndex = new VisIndex();
+      gView = new View(gIndex);
       gForm = new VisForm(gView);
       returnToIndex = function() {
         var currentVis;
@@ -383,9 +386,9 @@ keroserene@google.com  (Serene Han)
         gActions.hide();
         return gForm.hide();
       };
-      gIndex.updateData(INIT_JSON_DATA);
-      if (GRAPH_ID) {
-        gView.currentID = GRAPH_ID;
+      gIndex.updateData(INDEX_DATA);
+      if (VIS_ID) {
+        gView.currentID = VIS_ID;
       }
       $visEntries = $('.vis-entry');
       _.each(gIndex.visualizations, function(vis) {
@@ -394,10 +397,10 @@ keroserene@google.com  (Serene Han)
         return vis.entry.click(function() {
           vis.entry.addClass('selected');
           gActions.show();
+          console.log('showing', vis);
           window.setTimeout((function() {
             return gView.show(vis.id);
           }), 300);
-          $('#view-name').html(vis.name);
           window.history.pushState({}, null, 'view/' + vis.id);
           return window.addEventListener('popstate', function(e) {
             e.preventDefault();
@@ -410,7 +413,7 @@ keroserene@google.com  (Serene Han)
         e.preventDefault();
         if (gView.editMode) {
           gView.editMode = false;
-          console.log('returningfromedit ' + gView.currentID);
+          console.log('returning from edit mode! ' + gView.currentID);
           gForm.hide();
           return fadeShow(gActions.$viewMode);
         } else {
@@ -455,14 +458,13 @@ keroserene@google.com  (Serene Han)
         gView.editMode = true;
         gForm.prefill(gIndex.visByID[gView.currentID]);
         gForm.show();
-        gForm.$nameInput.focus();
         return fadeHide(gActions.$viewMode);
       });
       $tt = $('#tooltip');
       showTooltip = function(tool, tip) {
         var ofs;
         ofs = tool.offset();
-        $tt.removeClass('hidden');
+        fadeShow($tt);
         $tt.html(tip);
         return $tt.css(ofs);
       };
@@ -470,38 +472,49 @@ keroserene@google.com  (Serene Han)
         return fadeHide($tt);
       };
       hookTooltip = function(tool, tip) {
-        show = -> showTooltip tool, tip
-        tool.hover(showTooltip(tool, tip), hideTooltip);
-        tool.focus(showTooltip(tool, tip));
+        var show;
+        show = function() {
+          return showTooltip(tool, tip);
+        };
+        tool.hover(show, hideTooltip);
+        tool.focus(show);
         return tool.blur(hideTooltip);
       };
-      hookTooltip($back, 'back');
-      hookTooltip($edit, 'edit');
-      $('#btn-refresh').click(function(e) {
+      $refresh = $('#btn-refresh');
+      $refresh.click(function(e) {
         e.preventDefault();
         return gView.refresh();
       });
-      $('#btn-embed').click(function(e) {
+      $embed = $('#btn-embed');
+      $embed.click(function(e) {
         e.preventDefault();
         return console.log('share link');
       });
-      $('#btn-save-positions').click(function(e) {
+      $saveNodes = $('#btn-save-positions');
+      $saveNodes.click(function(e) {
         var queryString, updateUrl;
         e.preventDefault();
         queryString = gView.$frame[0].contentWindow.getPositionQuery();
         updateUrl = '?' + queryString;
         return window.history.pushState({}, 'unused', updateUrl);
       });
-      return $(document).keydown(function(e) {
+      hookTooltip($back, 'back');
+      hookTooltip($edit, 'edit');
+      hookTooltip($refresh, 'refresh visualization');
+      hookTooltip($embed, 'share');
+      hookTooltip($saveNodes, 'save node positions');
+      $(document).keydown(function(e) {
         if (e.keyCode === 27) {
           return $back.click();
         }
       });
+      if (VIS_ID) {
+        return gView.show(VIS_ID);
+      }
       /*
       # Primary button handlers.
       # The "save" button switches innerHTML between "Save" and "Create"
       # depending on if the opened dialogue is an edit or a new visualization.
-      $('#btn-save').click(saveOrCreate);
       $('#btn-delete').click(deleteGraph);
       $('#btn-embed').click(toggleEmbedLink);
       # Tooltips.

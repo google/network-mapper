@@ -1,5 +1,5 @@
 # Graph visualizer.
-define ['domReady', 'd3', 'jQuery', 'modernizr', 'backbone', 'underscore'], (
+define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
     domReady, d3, $, Modernizr, Backbone, _) ->
 
   Params = {
@@ -72,7 +72,8 @@ define ['domReady', 'd3', 'jQuery', 'modernizr', 'backbone', 'underscore'], (
           .attr('width', @width)
           .attr('height', @height)
       @$svg = @svg[0][0]
-      @url = options.url
+      # @url = options.url
+      @id = options.id
       @links = undefined
       @nodes = undefined
       @labels = undefined
@@ -105,7 +106,9 @@ define ['domReady', 'd3', 'jQuery', 'modernizr', 'backbone', 'underscore'], (
 
       @startPositions = @setupStartPositions queries
 
-      d3.json @url, (json) =>
+      # Fetch the actual visualization JSON data.
+      url = '/graph/' + @id + '/data.json'
+      d3.json url, (json) =>
         @json = json
         $('#graph-loading').html('')  # TODO(keroserene): Improve loader gfx.
         @setupLinks()
@@ -548,12 +551,17 @@ define ['domReady', 'd3', 'jQuery', 'modernizr', 'backbone', 'underscore'], (
   ##############################################################################
   # Entry point.
   $ ->
-    graph = new GeometricZoomGraph {
-        width: window.innerWidth
-        height: window.innerHeight
-        url: $('body').data 'graph-url'
-        # query: window.location.search
-      }
+    console.log 'Viewing: ' + VIS_ID
+    graph = null
+    window.initVisualization = (id) ->
+      graph = new GeometricZoomGraph {
+          width: window.innerWidth
+          height: window.innerHeight
+          id: id
+          # query: window.location.search
+        }
+    window.initVisualization VIS_ID
+
     window.getPositionQuery = () -> graph.getPositionQuery()
     popup = new Popup()
     ESCAPE_KEY_CODE = 27

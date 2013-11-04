@@ -2,7 +2,7 @@
 Single-Page UI for network visualizer.
 keroserene@google.com  (Serene Han)
 ###
-define ['domReady', 'jQuery', 'underscore'], (domReady, $, _) ->
+define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
   gButter = null
 
@@ -193,27 +193,39 @@ define ['domReady', 'jQuery', 'underscore'], (domReady, $, _) ->
     constructor: (@visIndex) ->
       @$view = $ '#view'
       @$loading = $ '#view-loading'
-      @$frame = $('#ajax-view').find('.vis-frame')
+      # @$frame = $('#ajax-view').find('.vis-frame')
       @currentID = null
       @editMode = false
       @$name = $ '#view-name'
       @state = @INDEX
+      # The script for running the d3 visualization code may be dynamically
+      # loaded, once, when necessary.
+      @_visCodeLoaded = false
 
     edit: -> @editMode = true
+
     # Entry point of showing a new visualization.
     show: (id) ->
       fadeShow @$loading
-      @loadURL('/graph/' + id)
+      window.VIS_ID=id  # Hack so that graph.coffee knows what to load.
+      @_loadURL('/view/' + id + '/standalone')
       @currentID = id
       @$name.html @visIndex.visByID[id].name
 
     # Load a url into the AJAX viewport.
     # Requires the target URL to have a div #ajax-view.
-    loadURL: (url) ->
-      @$view.load url + ' #ajax-view', () =>
+    _loadURL: (url) ->
+      console.log 'Loading AJAX: ' + url
+      @$view.load url + ' #ajax-view', =>
         # gButter.hide()
-        @$frame = $('#ajax-view').find('.vis-frame')
+        # @$frame = $('#ajax-view').find('.vis-frame')
         @$loading.hide()
+        if not @_visCodeLoaded
+          @_visCodeLoaded = true
+          console.log 'Loading graph js for the first time...'
+          require ['cs!graph']
+        else
+          window.initVisualization VIS_ID
       @$view.removeClass('hidden')
       @$view.show()
 
@@ -305,8 +317,9 @@ define ['domReady', 'jQuery', 'underscore'], (domReady, $, _) ->
       gActions.hide()
       gForm.hide()
 
-    gIndex.updateData INIT_JSON_DATA
-    gView.currentID = GRAPH_ID if GRAPH_ID  # If provided from django.
+    # Fetch potential django template variables.
+    gIndex.updateData INDEX_DATA
+    gView.currentID = VIS_ID if VIS_ID
 
     # Prepare view handler for each graph entry.
     $visEntries = $ '.vis-entry'
@@ -316,6 +329,8 @@ define ['domReady', 'jQuery', 'underscore'], (domReady, $, _) ->
         # gIndex.hide()
         vis.entry.addClass 'selected'
         gActions.show()
+        console.log('showing', vis)
+        # Slightly delay the actual loading of the visualization.
         window.setTimeout (=> gView.show(vis.id)), 300
         # hideHelp()
         # To be closed upon successful loading, or an error message appears.
@@ -325,9 +340,10 @@ define ['domReady', 'jQuery', 'underscore'], (domReady, $, _) ->
         # $(this).addClass 'selected'
         # $('#view-name').html(vis.name)
 
-        # Use pushState to update the browser's URL with no fuss.
+        # Use pushState to update the browser's URL.
         window.history.pushState({}, null, 'view/' + vis.id)
         window.addEventListener 'popstate', (e) =>
+          # Allow the back-button to restore previous state.
           e.preventDefault()
           returnToIndex()
 
@@ -429,6 +445,11 @@ define ['domReady', 'jQuery', 'underscore'], (domReady, $, _) ->
       # Catch 'escape' as equivalent to clicking the back button.
       if e.keyCode is 27
         $back.click()
+
+    # If a specific VIS_ID was specified, automatically open up the
+    # visualization.
+    if VIS_ID
+      gView.show VIS_ID
 
     ###
     # Primary button handlers.
