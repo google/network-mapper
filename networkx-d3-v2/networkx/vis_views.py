@@ -1,3 +1,5 @@
+"""All visualization-specific view handlers."""
+
 import json
 import logging
 
@@ -19,43 +21,43 @@ from auth.mixins import OAuth2RequiredMixin
 from clients.drive import SimpleDriveClient
 
 from .forms import GraphForm, DeleteGraphForm
-from .utils import GenerateData, GenerateNodesThroughSpreadsheet
+from .vis_utils import GenerateData, GenerateNodesThroughSpreadsheet
 from .models import Graph, Node, ErrorLog, Style
 
 
-class GraphBaseMixin(object):
+class VisBaseMixin(object):
   """Authenticated query for a single graph."""
   def dispatch(self, request, *args, **kwargs):
-    graph_id = kwargs.get('graph_id')
-    if graph_id:
-      self.graph = Graph.get_by_id(int(kwargs['graph_id']))
-      if not self.graph:
+    vis_id = kwargs.get('vis_id')
+    if vis_id:
+      self.vis = Graph.get_by_id(int(kwargs['vis_id']))
+      if not self.vis:
         raise Http404
-      if not self.graph.is_public:
+      if not self.vis.is_public:
         user = None
         if request.session.get('credentials', None):
           user = users.get_current_user()
         if not user:
-          logging.info('Graph %s is not public. Denied.' % graph_id)
+          logging.info('Vis %s is not public. Denied.' % vis_id)
           raise PermissionDenied
-      self.graph_id = graph_id
-      return super(GraphBaseMixin, self).dispatch(request, *args, **kwargs)
+      self.vis_id = vis_id
+      return super(VisBaseMixin, self).dispatch(request, *args, **kwargs)
 
     raise Http404
 
 
-class _GraphBaseView(GraphBaseMixin, View):
+class _VisBaseView(VisBaseMixin, View):
   """Base view providing only the id and main data."""
   def get_context_data(self, *args, **kwargs):
-    ctx = super(_GraphBaseView, self).get_context_data(*args, **kwargs)
+    ctx = super(_VisBaseView, self).get_context_data(*args, **kwargs)
     ctx.update({
-        'graph_id': self.graph_id,
-        'graph': self.graph
+        'vis_id': self.vis_id,
+        'vis': self.vis
     })
     return ctx
 
 
-class GraphView(_GraphBaseView, TemplateResponseMixin):
+class VisView(_VisBaseView, TemplateResponseMixin):
   """Pure graph view."""
   template_name = 'graph/graph.html'
 
@@ -86,19 +88,19 @@ class GraphView(_GraphBaseView, TemplateResponseMixin):
       styles.append(style.styles)
 
     ctx.update({
-        'graph_id': self.graph_id,
-        "defections_by_category": nodes_by_category,
-        "category_list": category_list,
-        "graph_style": ''.join(styles),
+        'vis_id': self.vis_id,
+        'defections_by_category': nodes_by_category,
+        'category_list': category_list,
+        'vis_style': ''.join(styles),
     })
     return ctx
 
 
-def GetGraph(graph_id):
+def GetGraph(vis_id):
   """Authenticated attempt to obtain graph by id."""
-  if not graph_id:
+  if not vis_id:
     raise Http404
-  graph = Graph.get_by_id(graph_id)
+  graph = Graph.get_by_id(vis_id)
   if not graph:
     raise Http404
   if not graph.is_public:
@@ -107,32 +109,32 @@ def GetGraph(graph_id):
       user = users.get_current_user()
     if not user:
       raise PermissionDenied
-  return graph_id
+  return vis_id
 
 
-class GraphData(_GraphBaseView):
+class Data(_VisBaseView):
   """Obtain pure JSON data for a single graph."""
   def get(self, request, *args, **kwargs):
     return HttpResponse(
-        json.dumps(GenerateData(self.graph)),
+        json.dumps(GenerateData(self.vis)),
         content_type="application/json")
 
 
-class GraphDetailView(_GraphBaseView, TemplateView):
+class GraphDetailView(_VisBaseView, TemplateView):
   template_name = "graph/graph_detail.html"
 
 
-class GraphStandaloneView(_GraphBaseView, TemplateView):
+class GraphStandaloneView(_VisBaseView, TemplateView):
   template_name = "graph/graph_standalone.html"
 
 
-class NodeDetail(_GraphBaseView):
+class NodeDetail(_VisBaseView):
   """JSON response for a single node. Detail popups should be AJAX'd."""
   def get(self, request, *args, **kwargs):
     if request.is_ajax():
       message = {}
       node = ndb.Key(
-          'Graph', int(kwargs['graph_id']),
+          'Graph', int(kwargs['vis_id']),
           'Node', int(kwargs['node_id'])).get()
       if not node:
         raise Http404
@@ -161,9 +163,9 @@ class GraphFormMixin(object):
 class GraphFetchingMixin(object):
   """Authenticates the graph fetch."""
   def dispatch(self, request, *args, **kwargs):
-    self.graph_id = int(kwargs.get('graph_id'))
-    if self.graph_id:
-      self.graph = Graph.get_by_id(self.graph_id)
+    self.vis_id = int(kwargs.get('vis_id'))
+    if self.vis_id:
+      self.graph = Graph.get_by_id(self.vis_id)
       if not self.graph:
         raise Http404
       user = users.get_current_user()
@@ -175,25 +177,25 @@ class GraphFetchingMixin(object):
   def get_context_data(self, *args, **kwargs):
     context = super(GraphFetchingMixin, self).get_context_data(*args, **kwargs)
     context.update({
-      'graph_id': self.graph_id,
-      "graph": self.graph
+      'vis_id': self.vis_id,
+      'vis': self.vis
     })
     return context
 
 
-class GraphCreate(OAuth2RequiredMixin, GraphFormMixin, FormView):
+class CreateVis(OAuth2RequiredMixin, GraphFormMixin, FormView):
   def dispatch(self, *args, **kwargs):
     self.user = users.get_current_user()
-    return super(GraphCreate, self).dispatch(*args, **kwargs)
+    return super(CreateVis, self).dispatch(*args, **kwargs)
 
 
-class GraphUpdate(
+class UpdateVis(
     OAuth2RequiredMixin, GraphFetchingMixin, GraphFormMixin, FormView):
   def get_initial(self):
     return self.graph.to_dict()
 
 
-class GraphDeleteView(OAuth2RequiredMixin, GraphFetchingMixin, FormView):
+class DeleteVis(OAuth2RequiredMixin, GraphFetchingMixin, FormView):
   template_name = "graph/graph_confirm_delete.html"
   form_class = DeleteGraphForm
   # TODO: indicate that it doesn't delete the google doc.
@@ -209,15 +211,15 @@ class GraphDeleteView(OAuth2RequiredMixin, GraphFetchingMixin, FormView):
     return HttpResponse('Delete.')
 
   def get_context_data(self, *args, **kwargs):
-    ctx = super(GraphDeleteView, self).get_context_data(*args, **kwargs)
+    ctx = super(DeleteVis, self).get_context_data(*args, **kwargs)
     ctx.update({
-      'graph_id': self.graph_id,
-      'graph': self.graph
+      'vis_id': self.vis_id,
+      'vis': self.vis
     })
     return ctx
 
 
-class GraphReloadView(OAuth2RequiredMixin, _GraphBaseView):
+class RefreshVis(OAuth2RequiredMixin, _VisBaseView):
 
   def get(self, request, *args, **kwargs):
     GenerateNodesThroughSpreadsheet(self.graph)
@@ -228,12 +230,12 @@ class GraphReloadView(OAuth2RequiredMixin, _GraphBaseView):
     return HttpResponse('Refreshed spreadsheet data for %s.' % self.graph.name)
 
 
-class GraphErrorLog(OAuth2RequiredMixin, GraphBaseMixin,
+class ErrorLog(OAuth2RequiredMixin, VisBaseMixin,
                     GraphFetchingMixin, TemplateView):
   template_name = "graph/graph_error_log.html"
 
   def get_context_data(self, **kwargs):
-    context = super(GraphErrorLog, self).get_context_data(**kwargs)
+    context = super(ErrorLog, self).get_context_data(**kwargs)
     latest_log = ErrorLog.query(ErrorLog.graph == self.graph.key).order(-ErrorLog.modified).get()
     if latest_log and latest_log.modified >= self.graph.modified:
       error_log = latest_log.json_log

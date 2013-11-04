@@ -8,7 +8,7 @@ from google.appengine.api import users
 from google.appengine.ext import deferred
 
 from .models import Graph
-from .utils import GenerateNodesThroughSpreadsheet
+from .vis_utils import GenerateNodesThroughSpreadsheet
 
 logger = logging.getLogger(__name__)
 

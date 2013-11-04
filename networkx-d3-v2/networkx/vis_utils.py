@@ -1,4 +1,4 @@
-"""Data generation helpers."""
+"""Visualization data generation helpers."""
 
 import datetime
 import httplib2
@@ -9,7 +9,7 @@ from oauth2client.appengine import StorageByKeyName, CredentialsModel
 
 from clients.conf import CATEGORIES_WORKSHEET_TITLE, NODES_WORKSHEET_TITLE
 from clients.spreadsheets import SimpleSpreadsheetsClient
-from .conf import MAX_IMPORTANCE, MIN_IMPORTANCE, ERROR_MESSAGES
+from .vis_conf import MAX_IMPORTANCE, MIN_IMPORTANCE, ERROR_MESSAGES
 from .models import Node, ErrorLog, Style
 
 
@@ -24,16 +24,14 @@ def GenerateData(graph):
 
   # First determine categories to include.
   for index, category in enumerate(all_categories):
-    graph_data['nodes'].append(
-      {
+    graph_data['nodes'].append({
         'name': category.name,
         'is_category': category.is_category,
         'node_style': category.node_style or '',
         'label_style': category.label_style or '',
         'group': index + 1,
         'importance': 0
-      }
-    )
+    })
     categories_position[category.key.id()] = index
 
   start = len(graph_data['nodes'])

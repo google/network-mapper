@@ -162,7 +162,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'graph',
     'clients',
     'auth',
     'appengine_sessions',

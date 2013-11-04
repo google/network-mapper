@@ -1,12 +1,15 @@
+"""All primary UI view handlers."""
+
 import json
 import logging
+
 from django.conf import settings
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.views.generic import View, TemplateView, FormView
 from google.appengine.api import users
 
-from graph.models import Graph
-from graph.forms import GraphForm
+from models import Graph
+from forms import GraphForm
 
 
 def FetchGraphs():

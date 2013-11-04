@@ -107,7 +107,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       @startPositions = @setupStartPositions queries
 
       # Fetch the actual visualization JSON data.
-      url = '/graph/' + @id + '/data.json'
+      url = '/data/' + @id
       d3.json url, (json) =>
         @json = json
         $('#graph-loading').html('')  # TODO(keroserene): Improve loader gfx.
