@@ -35,7 +35,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
     constructor: ->
       @$index = $ '#vis-index'
-      @visByID = {}
+      @visByID = {}   # ID -> visualization.
       @data = null
       @newEntryIsPending = false
 
@@ -58,7 +58,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     refresh: ->
       console.log 'refreshing index.'
       $.getJSON VisIndex.JSON_DATA_URL, (data) =>
-        console.log data
         # Update index of visualizations and determine newest ID.
         oldIDs = _.keys(@visByID)
         @updateData data
@@ -71,7 +70,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
           console.warn 'More than 1 new visualization ID discovered...'
         id = newIDs[0]
         vis = @visByID[id]
-        console.log('new ID!: ' + id)
         $pending = $ '#pending'
         if not $pending
           console.warn 'No pending DOM entry provided...'
@@ -81,11 +79,13 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         vis.entry = $pending
         hookVisEntry vis
 
+    # Actually remove |vis| from the index.
     remove: (vis) ->
       if not @visByID[vis.id]
         console.warn 'Attempted to remove non-existent visualization: ', vis
         return false
       @visByID[vis.id] = undefined
+
 
   ###
   Holds state for the actions panel.
@@ -187,10 +187,9 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       newSpreadsheet = sMatch[1]
       oldSpreadsheet = vis.url
       oldID = vis.id
-      # Trailing slash is vital.
-      data = @$formData.serialize()
+      data = @$formData.serialize()     # Trailing slash is vital.
       $.post '/update/' + vis.id + '/', data, =>
-        gButter.show('Update complete.')
+        # gButter.show('Update complete.')
         console.log 'updated'
         # Refresh if spreadsheet changed and still viewing current graph.
         if (newSpreadsheet != oldSpreadsheet)# && gCurrentGraphID == cachedGraphID)
@@ -206,15 +205,20 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       gButter.show('Updating details...', false)
       true
 
+    # Delete a visualization from the index.
     deleteVis: (vis) ->
       data = @$formData.serialize()
       id = vis.id
       console.log 'Deleting ' + vis.id
       $.post '/delete/' + vis.id + '/', data, =>
         console.log 'deleted ' + id
+        vis.entry.remove()
+        gIndex.remove vis
+      .fail =>
+        console.error 'failed to delete!!!'
+        vis.entry.removeClass('deleting')
       # Remove from the DOM prematurely.
-      vis.entry.remove()
-      gIndex.remove vis
+      vis.entry.addClass('deleting')
 
 
   # State-holding class for NetworkX primary viewport.
@@ -264,12 +268,12 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       @$view.removeClass('hidden')
       @$view.show()
 
-    # Refresh the currently viewed graph
+    # Refresh the currently viewed graph.
     refresh: () ->
       return if not @currentID
       console.log 'refreshing'
       cachedGraphID = @currentID  # In case user loads another graph.
-      $.get '/graph/' + @currentID + '/reload/', [], () =>
+      $.get '/refresh/' + @currentID + '/', [], () =>
         # Success callback which updates butterbar and DOM.
         $('#btn-refresh').removeClass('disabled')
         gButter.show('Visualization data refreshed!')
@@ -289,7 +293,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       window.addEventListener 'popstate', (e) => @show @currentID
       @currentID = null
       @$name.html ''
-      # $('.vis-entry').filter('.selected').removeClass('selected')
       # Conceal any open dialogues.
       # if $('#btn-embed').hasClass('active')
         # toggleEmbedLink()

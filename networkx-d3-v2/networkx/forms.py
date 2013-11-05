@@ -1,13 +1,13 @@
 """Form-handlers for visualization mutation."""
 import logging
+import thread
 
 from django import forms
 from django.forms.widgets import RadioSelect, HiddenInput
 
 from google.appengine.api import users
-from google.appengine.ext import deferred
 
-from .models import Graph
+from .models import Graph, Node
 from .vis_utils import GenerateNodesThroughSpreadsheet
 
 logger = logging.getLogger(__name__)
@@ -51,24 +51,24 @@ class VisForm(forms.Form):
       self.obj = Graph.get_by_id(vis_id)
 
   def clean_spreadsheet_link(self):
-    link = self.cleaned_data["spreadsheet_link"]
+    link = self.cleaned_data['spreadsheet_link']
     error_msg = "This URL doesn't look like a valid spreadsheet."
 
-    if link == u'':
+    if u'' == link:
       return link
     try:
-      path, params = link.split("?")
+      path, params = link.split('?')
     except ValueError:
       raise forms.ValidationError(error_msg)
 
     if '#gid=' in params:
-      splitted_params = params[:params.find('#gid=')].split("&")
+      splitted_params = params[:params.find('#gid=')].split('&')
     else:
-      splitted_params = params.split("&")
+      splitted_params = params.split('&')
 
     for param in splitted_params:
-      key, value = param.split("=")
-      if key == "key":
+      key, value = param.split('=')
+      if 'key' == key:
         return value
 
     raise forms.ValidationError(error_msg)
@@ -100,9 +100,9 @@ class VisForm(forms.Form):
 
     # Fill with data.
     graph.populate(
-      name=form_data["name"],
-      is_public=form_data["is_public"],
-      spreadsheet_id=form_data["spreadsheet_id"]
+      name = form_data['name'],
+      is_public = form_data['is_public'],
+      spreadsheet_id = form_data['spreadsheet_id']
     )
     if created or not self.obj.user_id:
       graph.user_id = users.get_current_user().user_id()
@@ -118,18 +118,31 @@ class VisForm(forms.Form):
     return graph
 
 
+def deleteNodes(nodes):
+  map(lambda n: n.key.delete(), nodes)
+
+
 class DeleteVisForm(forms.Form):
+
   vis_id = forms.CharField(
     required=True,
     label='',
     max_length=500,
     widget=HiddenInput()
   )
+
   def __init__(self, *args, **kwargs):
     super(DeleteVisForm, self).__init__(*args, **kwargs)
-    self.obj = None
+    self.vis = None
     vis_id = self.initial.get('vis_id', None)
     if vis_id:
-      self.obj = Graph.get_by_id(vis_id)
-  def delete(self):
-    Graph.delete(vis_id)
+      self.vis = Graph.get_by_id(vis_id)
+
+  def delete(self, vis):
+    # Deleting all the nodes may take some time - background it.
+    nodes = Node.query(Node.graph == vis.key)
+    vis.key.delete()
+    thread.start_new_thread(deleteNodes, (nodes,))
+    logging.info('Deleted %s', vis.key)
+    # map(meow, nodes)
+

@@ -70,8 +70,7 @@ def GenerateNodesThroughSpreadsheet(graph):
   """Parse spreadsheet data into nodes from graph."""
   storage = StorageByKeyName(CredentialsModel, graph.user_id, 'credentials')
   credentials = storage.get()
-
-  # Ensure this is good.
+  # Ensure we have credentials.
   if credentials.access_token_expired:
     http = httplib2.Http()
     credentials.refresh(http)
@@ -118,14 +117,14 @@ def GenerateNodesThroughSpreadsheet(graph):
           node = Node(parent=graph.key)
           node.populate(
             graph=graph.key,
-            name=copied_node["name"],
-            short_description=copied_node["short_description"],
-            long_description=copied_node["long_description"],
-            context_url=copied_node["context_url"],
-            importance=int(copied_node["importance"]),
-            credit=copied_node["credit"],
-            node_style=copied_node["node_style"],
-            label_style=copied_node["label_style"],
+            name=copied_node['name'],
+            short_description=copied_node['short_description'],
+            long_description=copied_node['long_description'],
+            context_url=copied_node['context_url'],
+            importance=int(copied_node['importance']),
+            credit=copied_node['credit'],
+            node_style=copied_node['node_style'],
+            label_style=copied_node['label_style'],
           )
           for node_category in _ListCategories(copied_node):
             node.categories.append(categories[node_category].key)

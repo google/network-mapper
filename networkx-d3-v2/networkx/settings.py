@@ -20,8 +20,8 @@ if on_production_server:
   env_name = get_application_id().lower()
 
 # Construct the path
-if env_name.startswith("google.com:"):
-  env_name = env_name.replace("google.com:", "")
+if env_name.startswith('google.com:'):
+  env_name = env_name.replace('google.com:', '')
   settings_path = os.path.join('networkx', 'conf', 'google', '%s.py' % env_name)
 else:
   settings_path = os.path.join('networkx', 'conf', '%s.py' % env_name)
@@ -37,8 +37,8 @@ else:
 
 # If the app is not deployed then allow importing of a `local_settings.py`
 # file to allow some customization, eg custom logging settings etc..
-if not on_production_server:
-  try:
-    from settings_local import *
-  except ImportError as e:
-    logging.info('NOTE: no local_settings.py file set: %s' % e)
+# if not on_production_server:
+  # try:
+    # from settings_local import *
+  # except ImportError as e:
+    # logging.info('NOTE: no local_settings.py file set: %s' % e)

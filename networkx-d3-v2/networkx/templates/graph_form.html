@@ -1,0 +1,26 @@
+<form id="vis-form" class="vis-form" method="post">{% csrf_token %}
+  {% if form.non_field_errors %}
+  <div class="alert alert-error">
+    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+  </div>
+  {% endif %}
+
+  {% for field in form %}
+  <div class="form-entry {{ field.id_for_label }} {% if field.errors %}error{% endif %}">
+    <label class="form-label">{{ field.label }}</label>
+    <div class="controls">
+      {{ field }}
+      {% if field.help_text %}
+        <p class="help-inline"><small>{{ field.help_text }}</small></p>
+      {% endif %}
+      {% if field.errors %}
+        <p class="help-inline">
+        {% for error in  field.errors %}{{ error }}{% endfor %}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <input type="hidden" id="id_graph_id" name="graph_id"></input>
+</form>

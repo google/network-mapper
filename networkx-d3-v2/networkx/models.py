@@ -17,8 +17,9 @@ class BaseModel(ndb.Model):
 class Graph(BaseModel):
   """Basic metadata required for a single visualization."""
   name = ndb.StringProperty()
-  user_id = ndb.StringProperty(required=True, verbose_name="User ID")
-  spreadsheet_id = ndb.StringProperty(required=True, verbose_name="Spreadsheet ID")
+  user_id = ndb.StringProperty(required=True, verbose_name='User ID')
+  spreadsheet_id = ndb.StringProperty(required=True,
+                                      verbose_name='Spreadsheet ID')
   is_public = ndb.BooleanProperty(default=False)
   last_updated = ndb.DateTimeProperty(auto_now_add=True)
 
@@ -27,10 +28,7 @@ class Graph(BaseModel):
 
   def to_dict(self):
     data = super(Graph, self).to_dict()
-    data.update({
-      "id": self.key.id(),
-      "graph_id": self.key.id()
-    })
+    data.update({ 'id': self.key.id() })
     return data
 
 
@@ -47,10 +45,10 @@ class Node(BaseModel):
   is_category = ndb.BooleanProperty(default=False)
   name = ndb.StringProperty(required=True)
   graph = ndb.KeyProperty(Graph, required=True)
-  short_description = ndb.TextProperty(verbose_name="Short Description")
-  long_description = ndb.TextProperty(verbose_name="Long Description")
-  context_url = ndb.StringProperty(verbose_name="Context URL")
-  credit = ndb.StringProperty(verbose_name="Credit")
+  short_description = ndb.TextProperty(verbose_name='Short Description')
+  long_description = ndb.TextProperty(verbose_name='Long Description')
+  context_url = ndb.StringProperty(verbose_name='Context URL')
+  credit = ndb.StringProperty(verbose_name='Credit')
   importance = ndb.IntegerProperty()
   categories = ndb.KeyProperty('Node', repeated=True)
   node_style = ndb.StringProperty()

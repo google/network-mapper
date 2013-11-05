@@ -14,7 +14,7 @@ from django.views.generic import View, TemplateView, FormView
 from django.views.decorators.http import require_GET, require_POST
 
 from django.views.generic.base import TemplateResponseMixin
-from google.appengine.ext import deferred, ndb
+from google.appengine.ext import ndb
 from google.appengine.api import users
 from auth.utils import GetCurrentCredentials
 from auth.mixins import OAuth2RequiredMixin
@@ -87,6 +87,7 @@ class VisView(_VisBaseView, TemplateResponseMixin):
     for style in graph_style:
       styles.append(style.styles)
 
+    # TODO(keroserene): Make this not defection-tracker dependent.
     ctx.update({
         'vis_id': self.vis_id,
         'defections_by_category': nodes_by_category,
@@ -152,12 +153,12 @@ class NodeDetail(_VisBaseView):
 
 class VisFormMixin(object):
   """Base for a form handler."""
-  template_name = "graph/graph_form.html"
+  template_name = 'graph_form.html'
   form_class = VisForm
 
   def form_valid(self, form):
-    form.save()
-    return HttpResponse('success')  # No actual URL.
+    form.save()  # Causes a save OR a create.
+    return HttpResponse('success')  # No actual response URL.
 
 
 class VisFetchingMixin(object):
@@ -204,11 +205,9 @@ class DeleteVis(OAuth2RequiredMixin, VisFetchingMixin, FormView):
 
   def form_valid(self, form):
     """Validate the form and delete the visualization."""
-    nodes = Node.query(Node.graph == self.vis.key)
     logging.info('Deleting %s', self.vis.key)
-    map(lambda n: n.key.delete(), nodes)
-    self.vis.key.delete()
-    messages.info(self.request, "Vis deleted")
+    form.delete(self.vis)
+    messages.info(self.request, 'Vis deleted')
     return HttpResponse('delete.')
 
   def get_context_data(self, *args, **kwargs):

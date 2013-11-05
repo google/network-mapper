@@ -401,6 +401,10 @@ input[type=checkbox]:checked::after, .fakecheckbox.checked::after {
   background: transparent url('../img/spinner.gif') no-repeat center center;
   border: 1px solid #800;
 }
+.vis-entry.deleting {
+  border: 1px solid #800;
+  opacity: 0.5;
+}
 
 /* Primary graph view context. */
 #view {

@@ -17,7 +17,7 @@ def FetchGraphs():
   try:
     graphs_query = Graph.query(Graph.user_id == user.user_id())
   except AttributeError:
-    []
+    graphs_query = None
   return graphs_query
 
 
@@ -39,7 +39,7 @@ def GetGraph(graph_id):
 
 def _JSONify(graphs_query):
   graphs = [graph.to_dict() for graph in graphs_query.iter()]
-  graphs = [(graph['graph_id'],
+  graphs = [(graph['id'],
              graph['name'],
              graph['spreadsheet_id'],
              graph['is_public']) for graph in graphs]

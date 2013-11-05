@@ -21,7 +21,7 @@ import google.storage.speckle.python.django.backend
 from networkx.utils import customize_path
 customize_path()
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "networkx.settings")
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'networkx.settings')
 
 # I don't understand how this ever worked without the exception handler- would
 # always return True or False, which will throw:
@@ -33,15 +33,15 @@ try:
       os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine') or\
       os.getenv('SETTINGS_MODE') == 'prod'
 except TypeError:
-  os.environ["APPENGINE_PRODUCTION"] = ""
+  os.environ['APPENGINE_PRODUCTION'] = ''
 
 import django
 import django.core.signals
 import django.dispatch
 
 if not os.getenv('APPENGINE_PRODUCTION'):
-  logging.info('Development django: %s' % django.__file__)
-  logging.info(django.get_version())
+  logging.info('Development django (%s): %s',
+               django.get_version(), django.__file__)
 
 # Log exceptions
 def log_exception(*args, **kwds):
