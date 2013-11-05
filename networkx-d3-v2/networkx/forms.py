@@ -46,9 +46,9 @@ class VisForm(forms.Form):
   def __init__(self, *args, **kwargs):
     super(VisForm, self).__init__(*args, **kwargs)
     self.obj = None
-    graph_id = self.initial.get('graph_id', None)
-    if graph_id:
-      self.obj = Graph.get_by_id(graph_id)
+    vis_id = self.initial.get('vis_id', None)
+    if vis_id:
+      self.obj = Graph.get_by_id(vis_id)
 
   def clean_spreadsheet_link(self):
     link = self.cleaned_data["spreadsheet_link"]
@@ -119,16 +119,17 @@ class VisForm(forms.Form):
 
 
 class DeleteVisForm(forms.Form):
-  graph_id = forms.CharField(
+  vis_id = forms.CharField(
     required=True,
-    label="",
+    label='',
     max_length=500,
     widget=HiddenInput()
   )
-
   def __init__(self, *args, **kwargs):
     super(DeleteVisForm, self).__init__(*args, **kwargs)
     self.obj = None
-    graph_id = self.initial.get('graph_id', None)
-    if graph_id:
-      self.obj = Graph.get_by_id(graph_id)
+    vis_id = self.initial.get('vis_id', None)
+    if vis_id:
+      self.obj = Graph.get_by_id(vis_id)
+  def delete(self):
+    Graph.delete(vis_id)

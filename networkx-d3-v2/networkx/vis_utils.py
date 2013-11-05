@@ -101,13 +101,13 @@ def GenerateNodesThroughSpreadsheet(graph):
       category = Node(parent=graph.key)
       category.populate(
         is_category=True,
-        name=f_category["name"],
+        name=f_category['name'],
         graph=graph.key,
-        node_style=f_category["node_style"],
-        label_style=f_category["label_style"],
+        node_style=f_category['node_style'],
+        label_style=f_category['label_style'],
       )
       category.put()
-      categories[f_category["name"]] = category
+      categories[f_category['name']] = category
 
     if categories:
       for (counter, f_node) in enumerate(fetched_nodes):

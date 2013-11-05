@@ -35,7 +35,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
     constructor: ->
       @$index = $ '#vis-index'
-      @visualizations = []
       @visByID = {}
       @data = null
       @newEntryIsPending = false
@@ -45,12 +44,10 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
     # Given JSON |data|, update internal index of all visualizations.
     updateData: (data) ->
-      console.log @visByID
       _.each data, (datum) =>
         [id, name, spreadsheet, isPublic] = datum
         if not @visByID.hasOwnProperty id
           vis = new Vis(id, name, spreadsheet, isPublic)
-          @visualizations.push vis
           @visByID[id] = vis
         else
           console.log 'vis ' + id + ' already exists.'
@@ -58,7 +55,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
     # Fetch JSON summary info for all existing visualizations, and update the
     # DOM if new visualizations must be listed.
-    refresh: =>
+    refresh: ->
       console.log 'refreshing index.'
       $.getJSON VisIndex.JSON_DATA_URL, (data) =>
         console.log data
@@ -83,6 +80,12 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         $pending.append '<div class="vis-entry-name">' + vis.name + '</div>'
         vis.entry = $pending
         hookVisEntry vis
+
+    remove: (vis) ->
+      if not @visByID[vis.id]
+        console.warn 'Attempted to remove non-existent visualization: ', vis
+        return false
+      @visByID[vis.id] = undefined
 
   ###
   Holds state for the actions panel.
@@ -186,7 +189,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       oldID = vis.id
       # Trailing slash is vital.
       data = @$formData.serialize()
-      $.post '/update/' + vis.id, data, =>
+      $.post '/update/' + vis.id + '/', data, =>
         gButter.show('Update complete.')
         console.log 'updated'
         # Refresh if spreadsheet changed and still viewing current graph.
@@ -206,8 +209,12 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     deleteVis: (vis) ->
       data = @$formData.serialize()
       id = vis.id
-      $.post '/delete/' + vis.id, data, =>
+      console.log 'Deleting ' + vis.id
+      $.post '/delete/' + vis.id + '/', data, =>
         console.log 'deleted ' + id
+      # Remove from the DOM prematurely.
+      vis.entry.remove()
+      gIndex.remove vis
 
 
   # State-holding class for NetworkX primary viewport.
@@ -372,7 +379,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
     # Prepare view handler for each graph entry.
     $visEntries = $ '.vis-entry'
-    _.each gIndex.visualizations, (vis) ->
+    _.each _.values(gIndex.visByID), (vis) ->
       hookVisEntry vis
 
     $back = $ '#btn-back'

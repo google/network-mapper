@@ -71,7 +71,7 @@ class VisView(_VisBaseView, TemplateResponseMixin):
     # make a list of the categories & counts
     category_list = Node.query(
         Node.is_category == True,
-        Node.graph == self.graph.key)
+        Node.graph == self.vis.key)
     nodes_by_category = SortedDict()
     for category in category_list:
       # it searches for entities whose tags value (regarded as a list) contains
@@ -83,7 +83,7 @@ class VisView(_VisBaseView, TemplateResponseMixin):
     })
 
     styles = []
-    graph_style = Style.query(Style.graph == self.graph.key)
+    graph_style = Style.query(Style.graph == self.vis.key)
     for style in graph_style:
       styles.append(style.styles)
 
@@ -160,22 +160,22 @@ class VisFormMixin(object):
     return HttpResponse('success')  # No actual URL.
 
 
-class GraphFetchingMixin(object):
+class VisFetchingMixin(object):
   """Authenticates the graph fetch."""
   def dispatch(self, request, *args, **kwargs):
     self.vis_id = int(kwargs.get('vis_id'))
     if self.vis_id:
-      self.graph = Graph.get_by_id(self.vis_id)
-      if not self.graph:
+      self.vis = Graph.get_by_id(self.vis_id)
+      if not self.vis:
         raise Http404
       user = users.get_current_user()
-      if user.user_id() != self.graph.user_id:
+      if user.user_id() != self.vis.user_id:
         raise PermissionDenied
-      return super(GraphFetchingMixin, self).dispatch(request, *args, **kwargs)
+      return super(VisFetchingMixin, self).dispatch(request, *args, **kwargs)
     raise Http404
 
   def get_context_data(self, *args, **kwargs):
-    context = super(GraphFetchingMixin, self).get_context_data(*args, **kwargs)
+    context = super(VisFetchingMixin, self).get_context_data(*args, **kwargs)
     context.update({
       'vis_id': self.vis_id,
       'vis': self.vis
@@ -189,26 +189,27 @@ class CreateVis(OAuth2RequiredMixin, VisFormMixin, FormView):
     return super(CreateVis, self).dispatch(*args, **kwargs)
 
 
-class UpdateVis(
-    OAuth2RequiredMixin, GraphFetchingMixin, VisFormMixin, FormView):
+class UpdateVis(OAuth2RequiredMixin, VisFetchingMixin, VisFormMixin, FormView):
   def get_initial(self):
-    return self.graph.to_dict()
+    return self.vis.to_dict()
 
 
-class DeleteVis(OAuth2RequiredMixin, GraphFetchingMixin, FormView):
-  # template_name = "graph/graph_confirm_delete.html"
+class DeleteVis(OAuth2RequiredMixin, VisFetchingMixin, FormView):
+  template_name = 'confirm_delete.html'
   form_class = DeleteVisForm
   # TODO: indicate that it doesn't delete the google doc.
 
   def get_initial(self):
-    return self.graph.to_dict()
+    return self.vis.to_dict()
 
   def form_valid(self, form):
-    nodes = Node.query(Node.graph == self.graph.key)
-    map(lambda x: x.key.delete(), nodes)
-    self.graph.key.delete()
-    messages.info(self.request, "Graph deleted")
-    return HttpResponse('Delete.')
+    """Validate the form and delete the visualization."""
+    nodes = Node.query(Node.graph == self.vis.key)
+    logging.info('Deleting %s', self.vis.key)
+    map(lambda n: n.key.delete(), nodes)
+    self.vis.key.delete()
+    messages.info(self.request, "Vis deleted")
+    return HttpResponse('delete.')
 
   def get_context_data(self, *args, **kwargs):
     ctx = super(DeleteVis, self).get_context_data(*args, **kwargs)
@@ -222,28 +223,28 @@ class DeleteVis(OAuth2RequiredMixin, GraphFetchingMixin, FormView):
 class RefreshVis(OAuth2RequiredMixin, _VisBaseView):
 
   def get(self, request, *args, **kwargs):
-    GenerateNodesThroughSpreadsheet(self.graph)
+    GenerateNodesThroughSpreadsheet(self.vis)
     messages.info(
         request,
-        'Requested latest data for \'%s\'.' % self.graph.name +
+        'Requested latest data for \'%s\'.' % self.vis.name +
         'This may take a few minutes to complete.')
-    return HttpResponse('Refreshed spreadsheet data for %s.' % self.graph.name)
+    return HttpResponse('Refreshed spreadsheet data for %s.' % self.vis.name)
 
 
 class ErrorLog(OAuth2RequiredMixin, VisBaseMixin,
-                    GraphFetchingMixin, TemplateView):
-  template_name = "graph/graph_error_log.html"
+               VisFetchingMixin, TemplateView):
+  template_name = 'graph/graph_error_log.html'
 
   def get_context_data(self, **kwargs):
     context = super(ErrorLog, self).get_context_data(**kwargs)
-    latest_log = ErrorLog.query(ErrorLog.graph == self.graph.key).order(-ErrorLog.modified).get()
-    if latest_log and latest_log.modified >= self.graph.modified:
+    latest_log = ErrorLog.query(ErrorLog.graph == self.vis.key).order(-ErrorLog.modified).get()
+    if latest_log and latest_log.modified >= self.vis.modified:
       error_log = latest_log.json_log
     else:
       error_log = None
     context.update({
         'page_title': 'Graph Log',
-        'graph': self.graph,
+        'graph': self.vis,
         'error_log': error_log
     })
     return context
@@ -261,12 +262,12 @@ class SpreadsheetList(View):
 
     referral_url = request.META.get('HTTP_REFERER', '').strip('/')
     splitted_url = referral_url.split('/')
-    if splitted_url[-1] == "update":
+    if splitted_url[-1] == 'update':
       graph = Graph.get_by_id(int(splitted_url[-2]))
       spreadsheet_id = graph.spreadsheet_id
 
     return render(
-      request, "graph/options_spreadsheet_form.html", {
-          "spreadsheets": spreadsheets,
-          "current_spreadsheet_id": spreadsheet_id})
+      request, 'graph/options_spreadsheet_form.html', {
+          'spreadsheets': spreadsheets,
+          'current_spreadsheet_id': spreadsheet_id})
 
