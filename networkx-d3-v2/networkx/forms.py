@@ -26,7 +26,7 @@ class ListFormField(forms.CharField):
     return value
 
 
-class GraphForm(forms.Form):
+class VisForm(forms.Form):
   """Defines the basic form for both creating and updating a graph."""
   name = forms.CharField(required=True, label="Graph Name", max_length=500)
   # spreadsheet_id = forms.CharField(
@@ -44,7 +44,7 @@ class GraphForm(forms.Form):
   is_public = forms.BooleanField(required=False)
 
   def __init__(self, *args, **kwargs):
-    super(GraphForm, self).__init__(*args, **kwargs)
+    super(VisForm, self).__init__(*args, **kwargs)
     self.obj = None
     graph_id = self.initial.get('graph_id', None)
     if graph_id:
@@ -74,7 +74,7 @@ class GraphForm(forms.Form):
     raise forms.ValidationError(error_msg)
 
   def clean(self):
-    cleaned_data = super(GraphForm, self).clean()
+    cleaned_data = super(VisForm, self).clean()
     spreadsheet_id = cleaned_data.get("spreadsheet_id", None)
     spreadsheet_link = cleaned_data.get("spreadsheet_link", None)
 
@@ -118,7 +118,7 @@ class GraphForm(forms.Form):
     return graph
 
 
-class DeleteGraphForm(forms.Form):
+class DeleteVisForm(forms.Form):
   graph_id = forms.CharField(
     required=True,
     label="",
@@ -127,7 +127,7 @@ class DeleteGraphForm(forms.Form):
   )
 
   def __init__(self, *args, **kwargs):
-    super(DeleteGraphForm, self).__init__(*args, **kwargs)
+    super(DeleteVisForm, self).__init__(*args, **kwargs)
     self.obj = None
     graph_id = self.initial.get('graph_id', None)
     if graph_id:

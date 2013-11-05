@@ -68,9 +68,9 @@ svg#visualization {
 .link {
   stroke: #ccc;
   position: absolute; z-index: 0;
-  -webkit-transition: stroke 0.2s ease-in; //for chrome, safari
-  -moz-transition: stroke 0.2s ease-in; //for mozilla firefox
-  -o-transition: stroke 0.2s ease-in; //for opera
+  -webkit-transition: stroke 0.2s ease-in;
+  -moz-transition: stroke 0.2s ease-in;
+  -o-transition: stroke 0.2s ease-in;
 }
 .link.hover {
   stroke: #aaa;
@@ -126,9 +126,9 @@ g.label {
 .label-text {
   stroke: none;
   text-shadow: 0 0 3px #fff;
-  -webkit-transition: opacity 0.5s ease-in; //for chrome, safari
-  -moz-transition: opacity 0.5s ease-in; //for mozilla firefox
-  -o-transition: opacity 0.5s ease-in; //for opera
+  -webkit-transition: opacity 0.5s ease-in;
+  -moz-transition: opacity 0.5s ease-in;
+  -o-transition: opacity 0.5s ease-in;
   position: absolute; z-index: 50;
 }
 .hovered-label {

@@ -3,8 +3,12 @@ Single-Page UI for network visualizer.
 keroserene@google.com  (Serene Han)
 ###
 define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
-
   gButter = null
+  gActions = null
+  gIndex = null
+  gView = null
+  gForm = null
+
 
   class Vis
     ID_PREFIX = '#v-'
@@ -27,7 +31,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
   Maintains State about all of the user's visualizations.
   ###
   class VisIndex
-    JSON_DATA_URL = '/data.json'
+    @JSON_DATA_URL = '/data.json'
 
     constructor: ->
       @$index = $ '#vis-index'
@@ -38,6 +42,8 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
     show: -> fadeShow @$index
     hide: -> fadeHide @$index
+
+    # Given JSON |data|, update internal index of all visualizations.
     updateData: (data) ->
       console.log @visByID
       _.each data, (datum) =>
@@ -52,26 +58,31 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
     # Fetch JSON summary info for all existing visualizations, and update the
     # DOM if new visualizations must be listed.
-    refresh: () ->
+    refresh: =>
       console.log 'refreshing index.'
-      # pending = $('#pending')
-      # $.getJSON @JSON_DATA_URL, (data) ->
-        # _.each data, (entry) =>
-          # return if not pending
-          # TODO(keroserene): Use sexy coffeescript stuff here
-          # id = entry[0]
-          # name = entry[1]
-          # spreadsheet = entry[2]
-          # @visByID[id] = new Vis(id, name, spreadsheet, null)
-          # if not id in gGraphs
-            # gGraphs[id] = name
-            # entryDOM = pending[0]
-            # pending = null
-            # entryDOM.id = ENTRY_ID_PREFIX + id
-            # entryDOM.innerHTML = name
-            # hookGraphEntry(entryDOM)
-        # if pending  # Try a refresh again
-          # setTimeout(refreshEntries, 500);
+      $.getJSON VisIndex.JSON_DATA_URL, (data) =>
+        console.log data
+        # Update index of visualizations and determine newest ID.
+        oldIDs = _.keys(@visByID)
+        @updateData data
+        # Isolate new visualization ID (only 1 is expected) and add to DOM.
+        newIDs = _.difference(_.keys(@visByID), oldIDs)
+        if 0 is newIDs.length
+          console.warn 'No new visualization ID discovered after creation...'
+          return false
+        if newIDs.length > 1
+          console.warn 'More than 1 new visualization ID discovered...'
+        id = newIDs[0]
+        vis = @visByID[id]
+        console.log('new ID!: ' + id)
+        $pending = $ '#pending'
+        if not $pending
+          console.warn 'No pending DOM entry provided...'
+          return false
+        $pending.attr('id', 'v-' + id)
+        $pending.append '<div class="vis-entry-name">' + vis.name + '</div>'
+        vis.entry = $pending
+        hookVisEntry vis
 
   ###
   Holds state for the actions panel.
@@ -146,14 +157,18 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     ###
     createVis: () ->
       data = @$formData.serialize()
-      $.post VisForm.CREATE_URL, data, () ->
+      $.post VisForm.CREATE_URL, data, =>
         # gButter.show('Finished creation.')
-        console.log 'created!'
-        # setTimeout(refreshEntries, 100)
+        console.log 'created.'
+        @view.visIndex.refresh()
         true
       name = $('#input_name').val()
       # gButter.show('Creating new visualization "' + name  + '"...', false)
-      console.log 'making a new thingy...' + name
+      console.log 'New Visualization [' + name + ']  ......'
+      # Create placeholder DOM element.
+      @$create.before '<div id="pending" class="vis-entry"></div>'
+      @view.visIndex.show()
+      gActions.hide()
       true
 
     ###
@@ -232,14 +247,13 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       console.log 'Loading AJAX: ' + url
       @$view.load url + ' #ajax-view', =>
         # gButter.hide()
-        # @$frame = $('#ajax-view').find('.vis-frame')
         @$loading.hide()
         if not @_visCodeLoaded
           @_visCodeLoaded = true
           console.log 'Loading graph js for the first time...'
           require ['cs!graph']
         else
-          graph = window.initVisualization VIS_ID
+          window.initVisualization VIS_ID
       @$view.removeClass('hidden')
       @$view.show()
 
@@ -313,6 +327,25 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       @dismissButton.hide()
       @text.html ''
 
+  returnToIndex = null
+  hookVisEntry = (vis) ->
+    vis.entry.click =>
+      vis.entry.addClass 'selected'
+      gActions.show()
+      console.log('showing', vis)
+      # Slightly delay the actual loading of the visualization.
+      # window.setTimeout (=> gView.show(vis.id)), 300
+      gView.show(vis.id)
+      # hideHelp()
+      # To be closed upon successful loading, or an error message appears.
+      # if id isnt gCurrentGraphID
+        # gButter.show('Loading...', false)
+      # Use pushState to update the browser's URL.
+      window.history.pushState({}, null, 'view/' + vis.id)
+      window.addEventListener 'popstate', (e) =>
+        # Allow the back-button to restore previous state.
+        e.preventDefault()
+        returnToIndex()
 
   # Prepare all AJAX / DOM / event handlers.
   domReady ->
@@ -323,6 +356,8 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     gView = new View(gIndex)
     gForm = new VisForm(gView)
 
+    # This function should be called anytime when the original visualization
+    # index view wants to be restored.
     returnToIndex = ->
       currentVis = gIndex.visByID[gView.currentID]
       currentVis.entry.removeClass 'selected' if currentVis
@@ -338,28 +373,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     # Prepare view handler for each graph entry.
     $visEntries = $ '.vis-entry'
     _.each gIndex.visualizations, (vis) ->
-      console.log vis
-      vis.entry.click =>
-        # gIndex.hide()
-        vis.entry.addClass 'selected'
-        gActions.show()
-        console.log('showing', vis)
-        # Slightly delay the actual loading of the visualization.
-        window.setTimeout (=> gView.show(vis.id)), 300
-        # hideHelp()
-        # To be closed upon successful loading, or an error message appears.
-        # if id isnt gCurrentGraphID
-          # gButter.show('Loading...', false)
-        # $visEntries.removeClass 'selected'
-        # $(this).addClass 'selected'
-        # $('#view-name').html(vis.name)
-
-        # Use pushState to update the browser's URL.
-        window.history.pushState({}, null, 'view/' + vis.id)
-        window.addEventListener 'popstate', (e) =>
-          # Allow the back-button to restore previous state.
-          e.preventDefault()
-          returnToIndex()
+      hookVisEntry vis
 
     $back = $ '#btn-back'
     $back.click (e) ->
@@ -498,5 +512,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     # Auto-view visualization if specified in URL.
     if VIS_ID
       gView.show(VIS_ID)
+      gActions.show()
     else
       gIndex.show()

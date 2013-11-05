@@ -20,7 +20,7 @@ from auth.utils import GetCurrentCredentials
 from auth.mixins import OAuth2RequiredMixin
 from clients.drive import SimpleDriveClient
 
-from .forms import GraphForm, DeleteGraphForm
+from .forms import VisForm, DeleteVisForm
 from .vis_utils import GenerateData, GenerateNodesThroughSpreadsheet
 from .models import Graph, Node, ErrorLog, Style
 
@@ -150,10 +150,10 @@ class NodeDetail(_VisBaseView):
       raise Http404
 
 
-class GraphFormMixin(object):
+class VisFormMixin(object):
   """Base for a form handler."""
   template_name = "graph/graph_form.html"
-  form_class = GraphForm
+  form_class = VisForm
 
   def form_valid(self, form):
     form.save()
@@ -183,21 +183,21 @@ class GraphFetchingMixin(object):
     return context
 
 
-class CreateVis(OAuth2RequiredMixin, GraphFormMixin, FormView):
+class CreateVis(OAuth2RequiredMixin, VisFormMixin, FormView):
   def dispatch(self, *args, **kwargs):
     self.user = users.get_current_user()
     return super(CreateVis, self).dispatch(*args, **kwargs)
 
 
 class UpdateVis(
-    OAuth2RequiredMixin, GraphFetchingMixin, GraphFormMixin, FormView):
+    OAuth2RequiredMixin, GraphFetchingMixin, VisFormMixin, FormView):
   def get_initial(self):
     return self.graph.to_dict()
 
 
 class DeleteVis(OAuth2RequiredMixin, GraphFetchingMixin, FormView):
-  template_name = "graph/graph_confirm_delete.html"
-  form_class = DeleteGraphForm
+  # template_name = "graph/graph_confirm_delete.html"
+  form_class = DeleteVisForm
   # TODO: indicate that it doesn't delete the google doc.
 
   def get_initial(self):

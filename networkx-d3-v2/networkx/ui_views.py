@@ -9,7 +9,7 @@ from django.views.generic import View, TemplateView, FormView
 from google.appengine.api import users
 
 from models import Graph
-from forms import GraphForm
+from forms import VisForm
 
 
 def FetchGraphs():
@@ -49,7 +49,7 @@ def _JSONify(graphs_query):
 class NetworkX(TemplateView, FormView):
   """Handler for the single-page omni-view."""
   template_name = 'networkx.html'
-  form_class = GraphForm
+  form_class = VisForm
 
   def dispatch(self, request, *args, **kwargs):
     vis_id = int(kwargs['vis_id']) if 'vis_id' in kwargs else None
@@ -67,7 +67,7 @@ class NetworkX(TemplateView, FormView):
     graphs_query = FetchGraphs()
     graphs = [graph for graph in graphs_query.iter()]
     context.update({
-        'form': GraphForm,
+        'form': VisForm,
         'graphs': graphs,
         'vis_count': len(graphs) if graphs else 0,
         'section': 'homepage',

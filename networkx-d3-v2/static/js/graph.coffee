@@ -115,7 +115,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       url = '/data/' + @id
       d3.json url, (error, json) =>
         if error or null is json
-          console.log 'Visualization does not exist.'
+          @_hideLoading()
           $('#invalid').show()
           @invalid = true
           return false
@@ -151,12 +151,15 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
             @nodeInfos[i].isFixed = true
 
         @force.start()
-        @$loading.html('')
-        @$loading.hide()
+        @_hideLoading()
         true
         # End of json success callback.
 
     _.extend(Graph.prototype, Backbone.Events)
+
+    _hideLoading: ->
+      @$loading.html('')
+      @$loading.hide()
 
     getRadiusForNode: (d) ->
       importance = d.importance or 1
@@ -613,7 +616,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       if (0 is $(evt.target).closest('.info-panel').length) and
          (not $(evt.target).is '.circle')
         popup.close()
-    $('body').on 'keydown', (evt) ->
+    $('#graph').on 'keydown', (evt) ->
       popup.close() if ESCAPE_KEY_CODE is evt.keyCode
 
     # Update the size of graph's context whenever window changes.
