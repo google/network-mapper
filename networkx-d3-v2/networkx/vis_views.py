@@ -28,8 +28,8 @@ from .models import Graph, Node, ErrorLog, Style
 class VisBaseMixin(object):
   """Authenticated query for a single graph."""
   def dispatch(self, request, *args, **kwargs):
-    vis_id = kwargs.get('vis_id')
-    if vis_id:
+    self.vis_id = kwargs.get('vis_id')
+    if self.vis_id:
       self.vis = Graph.get_by_id(int(kwargs['vis_id']))
       if not self.vis:
         raise Http404
@@ -38,11 +38,9 @@ class VisBaseMixin(object):
         if request.session.get('credentials', None):
           user = users.get_current_user()
         if not user:
-          logging.info('Vis %s is not public. Denied.' % vis_id)
+          logging.info('Visualization %s is not public. Denied.' % vis_id)
           raise PermissionDenied
-      self.vis_id = vis_id
       return super(VisBaseMixin, self).dispatch(request, *args, **kwargs)
-
     raise Http404
 
 
@@ -57,13 +55,9 @@ class _VisBaseView(VisBaseMixin, View):
     return ctx
 
 
-class VisView(_VisBaseView, TemplateResponseMixin):
-  """Pure graph view."""
-  template_name = 'graph/graph.html'
-
-  def get(self, request, *args, **kwargs):
-    context = self.get_context_data(**kwargs)
-    return self.render_to_response(context)
+class VisView(_VisBaseView, TemplateView):
+  """Standalone visualization view. Used as the basis for UI view & edits."""
+  template_name = 'vis.html'
 
   def get_context_data(self, **kwargs):
     ctx = {}
@@ -74,22 +68,18 @@ class VisView(_VisBaseView, TemplateResponseMixin):
         Node.graph == self.vis.key)
     nodes_by_category = SortedDict()
     for category in category_list:
-      # it searches for entities whose tags value (regarded as a list) contains
-      # at least one of those values.
+      # search for nodes who are tagged as part of this category.
       number = nodes.filter(Node.categories.IN([category.key])).count(limit=None)
       nodes_by_category.update({category.name: number})
-    nodes_by_category.update({
-        'total': nodes.count(limit=None)
-    })
+    nodes_by_category.update({ 'total': nodes.count(limit=None) })
 
     styles = []
-    graph_style = Style.query(Style.graph == self.vis.key)
-    for style in graph_style:
+    vis_style = Style.query(Style.graph == self.vis.key)
+    for style in vis_style:
       styles.append(style.styles)
 
     # TODO(keroserene): Make this not defection-tracker dependent.
     ctx.update({
-        'vis_id': self.vis_id,
         'defections_by_category': nodes_by_category,
         'category_list': category_list,
         'vis_style': ''.join(styles),
@@ -119,10 +109,6 @@ class Data(_VisBaseView):
     return HttpResponse(
         json.dumps(GenerateData(self.vis)),
         content_type="application/json")
-
-
-class GraphDetailView(_VisBaseView, TemplateView):
-  template_name = "graph/graph_detail.html"
 
 
 class GraphStandaloneView(_VisBaseView, TemplateView):

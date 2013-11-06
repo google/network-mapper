@@ -19,9 +19,9 @@ def GenerateData(graph):
   all_nodes = Node.query(Node.graph == graph.key, )
   all_categories = all_nodes.filter(Node.is_category == True)
   nodes = all_nodes.filter(Node.is_category == False)
-  categories_position = {}
-  graph_data = {'nodes': [], 'links': []}
 
+  graph_data = {'nodes': [], 'links': []}
+  categories_position = {}
   # First determine categories to include.
   for index, category in enumerate(all_categories):
     graph_data['nodes'].append({
@@ -55,7 +55,7 @@ def GenerateData(graph):
         'source': start + index,
         'target': categories_position[category_key.id()]
       })
-      if c_index == 0:
+      if 0 == c_index:
         node_data['group'] = categories_position[category_key.id()] + 1
 
   return graph_data

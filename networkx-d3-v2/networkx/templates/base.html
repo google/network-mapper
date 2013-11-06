@@ -23,13 +23,6 @@
   {% block sidebar %}
   {% endblock %}
 
-  {% for message in messages %}
-  <div{% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %}>
-    <button type="button" class="close" data-dismiss="alert">&times;</button>
-    {{ message }}
-  </div>
-  {% endfor %}
-
   {% block content %}
   <div id="btnbar">
     {% block button_bar %}

@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
 
-{% load url from future %}
-
 {% block extra_js %}
   VIS_ID='{{ vis_id }}';
   require(['cs!graph']);
@@ -10,6 +8,9 @@
 {% block content %}
 <div id="ajax-view">
   <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/vis.css" media="all" />
+  <style>
+  {{ vis_style }}
+  </style>
 
   <div id="vis-loading">Loading...</div>
   <div class="graph"></div>

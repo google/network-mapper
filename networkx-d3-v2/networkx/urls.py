@@ -16,7 +16,7 @@ urlpatterns = patterns(
     url(r'^$', ui.NetworkX.as_view(), {}, name='homepage'),
     url(r'^view/(?P<vis_id>\d+)$', ui.NetworkX.as_view(), {}, name='view'),
     # The standalone suffix only shows the visualization - with no other UI.
-    url(r'^view/(?P<vis_id>\d+)/standalone$', ui.Vis.as_view(), {}, name='view'),
+    url(r'^view/(?P<vis_id>\d+)/standalone$', vis.VisView.as_view(), {}, name='view'),
     # data.json gives a list of *all* the visualizations, as opposed to data for
     # a specific visualization.
     url(r'^data.json$', ui.NetworkXData.as_view(), {}, name='data'),
