@@ -93,6 +93,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     constructor: ->
       @$actions = $ '#vis-actions'
       @$viewMode = $ '#vis-view-mode'
+      @$edit = $ '#btn-edit'
       @$docs = $ '#btn-docs'
 
     show: (viewMode=true) ->
@@ -182,7 +183,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     Update visualization's meta-data.
     ###
     updateVis: (vis) ->
-      # oldSpreadsheet = gSpreadsheets[gCurrentGraphID];
       sMatch = @$spreadsheetInput.val().match(/ccc\?key=(.*)/)
       if null == sMatch
         # gButter.showError('Invalid spreadsheet URL.')
@@ -193,11 +193,12 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       oldID = vis.id
       data = @$formData.serialize()     # Trailing slash is vital.
       $.post '/update/' + vis.id + '/', data, =>
-        # gButter.show('Update complete.')
+        gButter.show('Updated.')
         console.log 'updated'
         # Refresh if spreadsheet changed and still viewing current graph.
+        console.log('spreadsheets: ' + newSpreadsheet + ' ' + oldSpreadsheet)
         if (newSpreadsheet != oldSpreadsheet)# && gCurrentGraphID == cachedGraphID)
-          setTimeout refreshGraph, 100
+          setTimeout gView.refresh, 100
         newName = @$nameInput.val()
         vis.name = newName
         # Update local data model and DOM.
@@ -362,7 +363,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     # if id isnt gCurrentGraphID
       # gButter.show('Loading...', false)
     # Use pushState to update the browser's URL.
-    window.history.pushState({}, null, 'view/' + vis.id)
+    window.history.pushState({}, null, '/view/' + vis.id)
     window.addEventListener 'popstate', (e) =>
       # Allow the back-button to restore previous state.
       e.preventDefault()
@@ -410,6 +411,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         console.log 'returning from edit mode! ' + gView.currentID
         gForm.hide()
         fadeShow gActions.$viewMode
+        gActions.$edit.focus()
       else
         # Return to index.
         returnToIndex()

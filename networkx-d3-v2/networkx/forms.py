@@ -8,7 +8,7 @@ from django.forms.widgets import RadioSelect, HiddenInput
 from google.appengine.api import users
 
 from .models import Graph, Node
-from .vis_utils import GenerateNodesThroughSpreadsheet
+from .vis_utils import GenerateNodesThroughSpreadsheet, saveVisualization
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,8 @@ class ListFormField(forms.CharField):
 
 class VisForm(forms.Form):
   """Defines the basic form for both creating and updating a graph."""
-  name = forms.CharField(required=True, label="Graph Name", max_length=500)
+  name = forms.CharField(
+      required=True, label="Visualization Name", max_length=500)
   # spreadsheet_id = forms.CharField(
     # required=False,
     # label="Select your spreadsheet",
@@ -38,7 +39,7 @@ class VisForm(forms.Form):
   # )
   spreadsheet_link = forms.URLField(
     required=True,
-    label="Spreadsheet Link",
+    label='Spreadsheet Link',
     max_length=500
   )
   is_public = forms.BooleanField(required=False)
@@ -49,6 +50,7 @@ class VisForm(forms.Form):
     vis_id = self.initial.get('vis_id', None)
     if vis_id:
       self.obj = Graph.get_by_id(vis_id)
+      logging.info('Vis does exist! :)')
 
   def clean_spreadsheet_link(self):
     link = self.cleaned_data['spreadsheet_link']
@@ -75,16 +77,13 @@ class VisForm(forms.Form):
 
   def clean(self):
     cleaned_data = super(VisForm, self).clean()
-    spreadsheet_id = cleaned_data.get("spreadsheet_id", None)
-    spreadsheet_link = cleaned_data.get("spreadsheet_link", None)
-
+    spreadsheet_id = cleaned_data.get('spreadsheet_id', None)
+    spreadsheet_link = cleaned_data.get('spreadsheet_link', None)
     if not spreadsheet_id and not spreadsheet_link:
       raise forms.ValidationError(
-        "You need to select a Google spreadsheet or provide a valid URL.")
-
+        'You need to select a Google spreadsheet or provide a valid URL.')
     if spreadsheet_link:
-      cleaned_data["spreadsheet_id"] = spreadsheet_link
-
+      cleaned_data['spreadsheet_id'] = spreadsheet_link
     return cleaned_data
 
   def save(self):

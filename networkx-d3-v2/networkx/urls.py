@@ -30,8 +30,9 @@ urlpatterns = patterns(
     url(r'^log/(?P<vis_id>\d+)$',
         google_login_required(vis.ErrorLog.as_view()), {}, name='log'),
     # POST actions
-    url(r'^update/(?P<vis_id>\d+)/$',
-        google_login_required(vis.UpdateVis.as_view()), {}, name='update'),
+    (r'^update/(?P<vis_id>\d+)/$', vis.updateVis),
+    # url(r'^update/(?P<vis_id>\d+)/$',
+        # google_login_required(vis.UpdateVis.as_view()), {}, name='update'),
     url(r'^refresh/(?P<vis_id>\d+)/$',
         google_login_required(vis.RefreshVis.as_view()), {}, name='refresh'),
     url(r'^delete/(?P<vis_id>\d+)/$',

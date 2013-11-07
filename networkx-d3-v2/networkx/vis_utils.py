@@ -2,6 +2,7 @@
 
 import datetime
 import httplib2
+import logging
 
 from django.core.validators import URLValidator
 from google.appengine.ext import ndb
@@ -173,6 +174,21 @@ def GenerateNodesThroughSpreadsheet(graph):
       error_log.put()
 
   _transaction()
+
+
+def saveVisualization(vis, data):
+  """Updates |vis| with |data| and saves to ndb."""
+  vis.populate(
+    name = data.get('name'),
+    is_public = data.get('is_public', False),
+    # TODO: Make spreadsheet_id vs. spreadsheet_link actually consistent...
+    spreadsheet_id = data.get('spreadsheet_link')
+  )
+  # if not self.obj.user_id:
+    # vis.user_id = users.get_current_user().user_id()
+  vis.put()
+  logging.info('Updated %s', vis)
+
 
 
 def _ListCategories(node):

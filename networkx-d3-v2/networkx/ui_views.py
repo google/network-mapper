@@ -21,22 +21,6 @@ def FetchGraphs():
   return graphs_query
 
 
-def GetGraph(graph_id):
-  """Authenticated attempt to obtain graph by id."""
-  if not graph_id:
-    raise Http404
-  graph = Graph.get_by_id(graph_id)
-  if not graph:
-    raise Http404
-  if not graph.is_public:
-    user = None
-    if request.session.get('credentials', None):
-      user = users.get_current_user()
-    if not user:
-      raise PermissionDenied
-  return graph_id
-
-
 def _JSONify(graphs_query):
   graphs = [graph.to_dict() for graph in graphs_query.iter()]
   graphs = [(graph['id'],
