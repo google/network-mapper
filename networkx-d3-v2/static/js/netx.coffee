@@ -9,7 +9,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
   gView = null
   gForm = null
 
-
   class Vis
     ID_PREFIX = '#v-'
     constructor: (@id, @name, @url, @isPublic) ->
@@ -94,6 +93,8 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     constructor: ->
       @$actions = $ '#vis-actions'
       @$viewMode = $ '#vis-view-mode'
+      @$docs = $ '#btn-docs'
+
     show: (viewMode=true) ->
       if viewMode
         fadeShow @$viewMode
@@ -122,7 +123,10 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     show: () ->
       fadeShow @$form
       @$nameInput.focus()
-    hide: () -> fadeHide @$form
+    hide: () ->
+      # fadeHide @$form
+      @$form.addClass 'hidden'
+
     # When currently viewing a particular visualization, prefill the form with
     # its info so that edits occur correctly.
     prefill: (vis) ->
@@ -338,24 +342,37 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       @text.html ''
 
   returnToIndex = null
+
+  # Opens up a visualization and prepares all state.
+  viewVisualization = (vis) ->
+    vis.entry.addClass 'selected'
+    gActions.show()
+    console.log('showing', vis)
+    # Slightly delay the actual loading of the visualization.
+    # window.setTimeout (=> gView.show(vis.id)), 300
+    gView.show(vis.id)
+    # Change spreadsheet target.
+    console.log vis
+    gActions.$docs.attr(
+        'href',
+        'https://docs.google.com/spreadsheet/ccc?key=' + vis.url)
+
+    # hideHelp()
+    # To be closed upon successful loading, or an error message appears.
+    # if id isnt gCurrentGraphID
+      # gButter.show('Loading...', false)
+    # Use pushState to update the browser's URL.
+    window.history.pushState({}, null, 'view/' + vis.id)
+    window.addEventListener 'popstate', (e) =>
+      # Allow the back-button to restore previous state.
+      e.preventDefault()
+      returnToIndex()
+
+  # Installs the click handler on a visualization entry in the index.
   hookVisEntry = (vis) ->
-    vis.entry.click =>
-      vis.entry.addClass 'selected'
-      gActions.show()
-      console.log('showing', vis)
-      # Slightly delay the actual loading of the visualization.
-      # window.setTimeout (=> gView.show(vis.id)), 300
-      gView.show(vis.id)
-      # hideHelp()
-      # To be closed upon successful loading, or an error message appears.
-      # if id isnt gCurrentGraphID
-        # gButter.show('Loading...', false)
-      # Use pushState to update the browser's URL.
-      window.history.pushState({}, null, 'view/' + vis.id)
-      window.addEventListener 'popstate', (e) =>
-        # Allow the back-button to restore previous state.
-        e.preventDefault()
-        returnToIndex()
+    vis.entry.click => viewVisualization vis
+
+  getCurrentVisualization = -> gIndex.visByID[gView.currentID]
 
   # Prepare all AJAX / DOM / event handlers.
   domReady ->
@@ -369,7 +386,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     # This function should be called anytime when the original visualization
     # index view wants to be restored.
     returnToIndex = ->
-      currentVis = gIndex.visByID[gView.currentID]
+      currentVis = getCurrentVisualization()
       currentVis.entry.removeClass 'selected' if currentVis
       gIndex.show()
       gView.clear()
@@ -382,8 +399,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
     # Prepare view handler for each graph entry.
     $visEntries = $ '.vis-entry'
-    _.each _.values(gIndex.visByID), (vis) ->
-      hookVisEntry vis
+    _.each _.values(gIndex.visByID), (vis) -> hookVisEntry vis
 
     $back = $ '#btn-back'
     $back.click (e) ->
@@ -439,20 +455,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       fadeHide gActions.$viewMode
       # gDOM.saveBtn.text('Save')
 
-    $tt = $('#tooltip')
-    showTooltip = (tool, tip) ->
-      ofs = tool.offset()
-      # $tt.removeClass 'hidden'
-      fadeShow $tt
-      $tt.html tip
-      $tt.css ofs
-    hideTooltip = -> fadeHide $tt
-    hookTooltip = (tool, tip) ->
-      show = -> showTooltip tool, tip
-      tool.hover show, hideTooltip
-      tool.focus show
-      tool.blur hideTooltip
-
     $refresh = $ '#btn-refresh'
     $refresh.click (e) ->
       e.preventDefault()
@@ -472,11 +474,26 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       window.history.pushState({}, 'unused', updateUrl)
       # TODO(keroserene): Push changes to the underlying document.
 
+    $docs = $ '#btn-docs'
 
+    $tt = $('#tooltip')
+    showTooltip = (tool, tip) ->
+      ofs = tool.offset()
+      # $tt.removeClass 'hidden'
+      fadeShow $tt
+      $tt.html tip
+      $tt.css ofs
+    hideTooltip = -> fadeHide $tt
+    hookTooltip = (tool, tip) ->
+      show = -> showTooltip tool, tip
+      tool.hover show, hideTooltip
+      tool.focus show
+      tool.blur hideTooltip
     hookTooltip $back, 'back'
     hookTooltip $edit, 'edit'
     hookTooltip $refresh, 'refresh visualization'
     hookTooltip $embed, 'share'
+    hookTooltip $docs, 'open underlying spreadsheet'
     hookTooltip $saveNodes, 'save node positions'
 
     $(document).keydown (e) ->
@@ -521,7 +538,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
     # Auto-view visualization if specified in URL.
     if VIS_ID
-      gView.show(VIS_ID)
+      viewVisualization gIndex.visByID[VIS_ID]
       gActions.show()
     else
       gIndex.show()

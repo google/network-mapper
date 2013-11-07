@@ -63,7 +63,7 @@ def GenerateData(graph):
 
 def _KeysToDelete(model_class, ancestor_key):
   query = model_class.query(ancestor=ancestor_key)
-  return [key for key in query.iter(keys_only=True)] 
+  return [key for key in query.iter(keys_only=True)]
 
 
 def GenerateNodesThroughSpreadsheet(graph):

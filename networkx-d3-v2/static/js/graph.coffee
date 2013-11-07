@@ -581,6 +581,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
     window.getPositionQuery = () -> graph.getPositionQuery()
     popup = new Popup()
     ESCAPE_KEY_CODE = 27
+
     # Prepare popup handlers.
     popup.listenTo graph, 'click:node', (evt, obj) =>
       return if undefined is obj.short_description
@@ -616,6 +617,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       if (0 is $(evt.target).closest('.info-panel').length) and
          (not $(evt.target).is '.circle')
         popup.close()
+      true  # Bubble the click event so other interactions can still work.
     $('#graph').on 'keydown', (evt) ->
       popup.close() if ESCAPE_KEY_CODE is evt.keyCode
 

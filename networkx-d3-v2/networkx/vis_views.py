@@ -80,6 +80,7 @@ class VisView(_VisBaseView, TemplateView):
 
     # TODO(keroserene): Make this not defection-tracker dependent.
     ctx.update({
+        'vis_id': self.vis_id,
         'defections_by_category': nodes_by_category,
         'category_list': category_list,
         'vis_style': ''.join(styles),
