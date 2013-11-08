@@ -200,7 +200,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         if (newSpreadsheet != oldSpreadsheet)# && gCurrentGraphID == cachedGraphID)
           setTimeout gView.refresh, 100
         newName = @$nameInput.val()
-        vis.name = newName
         # Update local data model and DOM.
         vis.name = newName
         vis.entry.find('.vis-entry-name').html newName

@@ -21,8 +21,8 @@ from auth.mixins import OAuth2RequiredMixin
 from clients.drive import SimpleDriveClient
 
 from .forms import VisForm, DeleteVisForm
-from .vis_utils import GenerateData, GenerateNodesThroughSpreadsheet, saveVisualization
-from .models import Graph, Node, ErrorLog, Style
+from .models import Vis, Node, ErrorLog, Style
+import vis_utils as VisUtils
 
 
 class VisBaseMixin(object):
@@ -30,7 +30,7 @@ class VisBaseMixin(object):
   def dispatch(self, request, *args, **kwargs):
     self.vis_id = kwargs.get('vis_id')
     if self.vis_id:
-      self.vis = Graph.get_by_id(int(kwargs['vis_id']))
+      self.vis = Vis.get_by_id(int(kwargs['vis_id']))
       if not self.vis:
         raise Http404
       if not self.vis.is_public:
@@ -65,7 +65,7 @@ class VisView(_VisBaseView, TemplateView):
     # make a list of the categories & counts
     category_list = Node.query(
         Node.is_category == True,
-        Node.graph == self.vis.key)
+        Node.vis == self.vis.key)
     nodes_by_category = SortedDict()
     for category in category_list:
       # search for nodes who are tagged as part of this category.
@@ -74,7 +74,7 @@ class VisView(_VisBaseView, TemplateView):
     nodes_by_category.update({ 'total': nodes.count(limit=None) })
 
     styles = []
-    vis_style = Style.query(Style.graph == self.vis.key)
+    vis_style = Style.query(Style.vis == self.vis.key)
     for style in vis_style:
       styles.append(style.styles)
 
@@ -92,11 +92,11 @@ class Data(_VisBaseView):
   """Obtain pure JSON data for a single graph."""
   def get(self, request, *args, **kwargs):
     return HttpResponse(
-        json.dumps(GenerateData(self.vis)),
+        json.dumps(VisUtils.generateData(self.vis)),
         content_type="application/json")
 
 
-class GraphStandaloneView(_VisBaseView, TemplateView):
+class VisStandaloneView(_VisBaseView, TemplateView):
   template_name = "graph/graph_standalone.html"
 
 
@@ -106,7 +106,7 @@ class NodeDetail(_VisBaseView):
     if request.is_ajax():
       message = {}
       node = ndb.Key(
-          'Graph', int(kwargs['vis_id']),
+          'Vis', int(kwargs['vis_id']),
           'Node', int(kwargs['node_id'])).get()
       if not node:
         raise Http404
@@ -137,14 +137,14 @@ class VisFetchingMixin(object):
   def dispatch(self, request, *args, **kwargs):
     self.vis_id = int(kwargs.get('vis_id'))
     # if self.vis_id:
-      # self.vis = Graph.get_by_id(self.vis_id)
+      # self.vis = Vis.get_by_id(self.vis_id)
       # if not self.vis:
         # raise Http404
       # user = users.get_current_user()
       # if user.user_id() != self.vis.user_id:
         # raise PermissionDenied
     # raise Http404
-    self.vis = getVis(self.vis_id, request)
+    self.vis = authenticate(request, getVis(self.vis_id))
     return super(VisFetchingMixin, self).dispatch(request, *args, **kwargs)
 
   def get_context_data(self, *args, **kwargs):
@@ -162,30 +162,54 @@ class CreateVis(OAuth2RequiredMixin, VisFormMixin, FormView):
     return super(CreateVis, self).dispatch(*args, **kwargs)
 
 
-def getVis(vis_id, request):
-  """Authenticated fetch of a visualization."""
+def getVis(vis_id):
+  """Fetches a Vis entity. Not authenticated."""
   vis_id = int(vis_id)  # Casting to int is required or ndb lookup fails.
   if not vis_id:
     raise Http404
-  logging.info(vis_id)
-  vis = Graph.get_by_id(vis_id)
+  vis = Vis.get_by_id(vis_id)
   if not vis:
     raise Http404
+  return vis
+
+
+def authenticate(request, vis):
+  """Authenticates |vis|.
+
+  Ensure |vis| is either public, or has appropriate credentials for user.
+
+  Returns |vis| if authenticated. Raises PermissionDenied otherwise.
+  """
   if not vis.is_public:
     user = None
     if request.session.get('credentials', None):
       user = users.get_current_user()
     if not user:
       raise PermissionDenied
+  # TODO: Ensure the id contained in request matches vis.
   return vis
+
+
+def createVis(request):
+  """Handler which creates a new visualization."""
+  vis = VisUtils.createVisualization(request.POST)
+  return HttpResponse('created. id: %s', vis)
 
 
 def updateVis(request, vis_id):
   """Handler which updates a visualization's meta-data."""
-  vis = getVis(vis_id, request)
-  data = request.POST
-  saveVisualization(vis, data)
+  VisUtils.saveVisualization(
+      authenticate(request, getVis(vis_id)),
+      data=request.POST)
   return HttpResponse('updated.')
+
+
+def refreshVis(request, vis_id):
+  """Handler which refreshes visualization's data from spreadsheet."""
+  VisUtils.generateNodesFromSpreadsheet(
+      authenticate(request, getVis(vis_id)))
+  return HttpResponse('refreshed.')
+
 
 def deleteVis(request, vis_id):
   pass
@@ -215,17 +239,6 @@ class DeleteVis(OAuth2RequiredMixin, VisFetchingMixin, FormView):
     return ctx
 
 
-class RefreshVis(OAuth2RequiredMixin, _VisBaseView):
-
-  def get(self, request, *args, **kwargs):
-    GenerateNodesThroughSpreadsheet(self.vis)
-    messages.info(
-        request,
-        'Requested latest data for \'%s\'.' % self.vis.name +
-        'This may take a few minutes to complete.')
-    return HttpResponse('Refreshed spreadsheet data for %s.' % self.vis.name)
-
-
 class ErrorLog(OAuth2RequiredMixin, VisBaseMixin,
                VisFetchingMixin, TemplateView):
   template_name = 'graph/graph_error_log.html'
@@ -238,7 +251,7 @@ class ErrorLog(OAuth2RequiredMixin, VisBaseMixin,
     else:
       error_log = None
     context.update({
-        'page_title': 'Graph Log',
+        'page_title': 'Vis Log',
         'graph': self.vis,
         'error_log': error_log
     })
@@ -258,7 +271,7 @@ class SpreadsheetList(View):
     referral_url = request.META.get('HTTP_REFERER', '').strip('/')
     splitted_url = referral_url.split('/')
     if splitted_url[-1] == 'update':
-      graph = Graph.get_by_id(int(splitted_url[-2]))
+      graph = Vis.get_by_id(int(splitted_url[-2]))
       spreadsheet_id = graph.spreadsheet_id
 
     return render(

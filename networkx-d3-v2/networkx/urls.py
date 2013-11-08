@@ -23,18 +23,20 @@ urlpatterns = patterns(
     url(r'^help/$', ui.Help.as_view(), {}, name='help'),
 
     # Vis urls.
-    url(r'^create/$',
-        google_login_required(vis.CreateVis.as_view()), {}, name='create'),
+    # url(r'^create/$',
+        # google_login_required(vis.CreateVis.as_view()), {}, name='create'),
     url(r'^data/(?P<vis_id>\d+)$',
         google_login_required(vis.Data.as_view()), {}, name='data'),
     url(r'^log/(?P<vis_id>\d+)$',
         google_login_required(vis.ErrorLog.as_view()), {}, name='log'),
+
     # POST actions
+    (r'^create/$', vis.createVis),
     (r'^update/(?P<vis_id>\d+)/$', vis.updateVis),
-    # url(r'^update/(?P<vis_id>\d+)/$',
-        # google_login_required(vis.UpdateVis.as_view()), {}, name='update'),
-    url(r'^refresh/(?P<vis_id>\d+)/$',
-        google_login_required(vis.RefreshVis.as_view()), {}, name='refresh'),
+    (r'^refresh/(?P<vis_id>\d+)/$', vis.refreshVis),
+
+    # url(r'^refresh/(?P<vis_id>\d+)/$',
+        # google_login_required(vis.RefreshVis.as_view()), {}, name='refresh'),
     url(r'^delete/(?P<vis_id>\d+)/$',
         google_login_required(vis.DeleteVis.as_view()), {}, name='delete'),
 )

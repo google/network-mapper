@@ -7,8 +7,8 @@ from django.forms.widgets import RadioSelect, HiddenInput
 
 from google.appengine.api import users
 
-from .models import Graph, Node
-from .vis_utils import GenerateNodesThroughSpreadsheet, saveVisualization
+from .models import Vis, Node
+from .vis_utils import generateNodesFromSpreadsheet, saveVisualization
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class VisForm(forms.Form):
     self.obj = None
     vis_id = self.initial.get('vis_id', None)
     if vis_id:
-      self.obj = Graph.get_by_id(vis_id)
+      self.obj = Vis.get_by_id(vis_id)
       logging.info('Vis does exist! :)')
 
   def clean_spreadsheet_link(self):
@@ -94,7 +94,7 @@ class VisForm(forms.Form):
     graph = self.obj
     if not graph:
       created = True
-      graph = Graph()
+      graph = Vis()
       logger.info('New graph created. %s', graph);
 
     # Fill with data.
@@ -110,9 +110,9 @@ class VisForm(forms.Form):
     if created:
       # Keep it blocking, because this is an ajax call.
       logger.info(
-          'Creating nodes for Graph %s; spreadsheet_id=%s; user_id=%s;',
+          'Creating nodes for Vis %s; spreadsheet_id=%s; user_id=%s;',
           graph.key, graph.spreadsheet_id, graph.user_id)
-      GenerateNodesThroughSpreadsheet(graph)
+      generateNodesFromSpreadsheet(graph)
 
     return graph
 
@@ -135,7 +135,7 @@ class DeleteVisForm(forms.Form):
     self.vis = None
     vis_id = self.initial.get('vis_id', None)
     if vis_id:
-      self.vis = Graph.get_by_id(vis_id)
+      self.vis = Vis.get_by_id(vis_id)
 
   def delete(self, vis):
     # Deleting all the nodes may take some time - background it.

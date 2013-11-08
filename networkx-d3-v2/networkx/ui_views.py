@@ -8,26 +8,31 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.views.generic import View, TemplateView, FormView
 from google.appengine.api import users
 
-from models import Graph
+from models import Vis
 from forms import VisForm
 
 
-def FetchGraphs():
+def _fetchIndex():
+  """Obtain list of all visualizations."""
   user = users.get_current_user()
+  logging.info('Fetching index for user %s', user.user_id())
   try:
-    graphs_query = Graph.query(Graph.user_id == user.user_id())
+    query = Vis.query(Vis.user_id == user.user_id())
   except AttributeError:
-    graphs_query = None
-  return graphs_query
+    query = None
+  index = []
+  if query:
+    index = [vis.to_dict() for vis in query.iter()]
+  return index
 
 
-def _JSONify(graphs_query):
-  graphs = [graph.to_dict() for graph in graphs_query.iter()]
-  graphs = [(graph['id'],
-             graph['name'],
-             graph['spreadsheet_id'],
-             graph['is_public']) for graph in graphs]
-  return json.dumps(graphs)
+def _JSONifyIndex(index):
+  """Return JSON formatted index."""
+  # Ordering of these attributes is important for the javascript to parse
+  # correctly.
+  return json.dumps(
+      [(vis['id'], vis['name'],
+        vis['spreadsheet_id'], vis['is_public']) for vis in index])
 
 
 class NetworkX(TemplateView, FormView):
@@ -39,24 +44,20 @@ class NetworkX(TemplateView, FormView):
     vis_id = int(kwargs['vis_id']) if 'vis_id' in kwargs else None
     # Redirect to the public embed URL if unreachable internally.
     # if vis_id:
-      # return HttpResponseRedirect('/graph/%s/embed/' % vis_id)
+      # return HttpResponseRedirect('/vis/%s/embed/' % vis_id)
     return super(NetworkX, self).dispatch(request, *args, **kwargs)
 
   def get_context_data(self, **kwargs):
     """Optional |vis_id| as a matched parameter."""
     context = super(NetworkX, self).get_context_data(**kwargs)
-    graph = None
+    vis = None
     vis_id = int(kwargs['vis_id']) if 'vis_id' in kwargs else None
-
-    graphs_query = FetchGraphs()
-    graphs = [graph for graph in graphs_query.iter()]
+    index = _fetchIndex()
     context.update({
-        'form': VisForm,
-        'graphs': graphs,
-        'vis_count': len(graphs) if graphs else 0,
-        'section': 'homepage',
+        'index': index,
+        'vis_count': len(index),
         'hostname': settings.HOSTNAME,
-        'json_data': _JSONify(graphs_query)
+        'json_data': _JSONifyIndex(index)
     })
     if vis_id:
       context['vis_id'] = vis_id
@@ -64,23 +65,10 @@ class NetworkX(TemplateView, FormView):
 
 
 class NetworkXData(TemplateView):
-  """Obtain JSON data for the graphs list."""
+  """Obtain JSON data for the viss list."""
   def get(self, request, *args, **kwargs):
-    graphs_query = FetchGraphs()
-    return HttpResponse(_JSONify(graphs_query), mimetype='application/json')
-
-
-class Vis(TemplateView):
-  """Handler for the standalone visualization view."""
-  template_name = 'vis.html'
-
-  def get_context_data(self, **kwargs):
-    # context = super(Vis, self).get_context_data(**kwargs)
-    graph = None
-    vis_id = int(kwargs['vis_id']) if 'vis_id' in kwargs else None
-    context = {}
-    context.update({'vis_id': vis_id})
-    return context
+    index = _fetchIndex()
+    return HttpResponse(_JSONifyIndex(index), mimetype='application/json')
 
 
 class Help(TemplateView):

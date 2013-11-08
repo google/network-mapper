@@ -32,18 +32,18 @@ class SimpleSpreadsheetsClient(SpreadsheetsClient):
       spreadsheet_id,
       auth_token=self.auth_token)
     worksheets = {
-      "categories": None,
-      "nodes": None,
-      "styles": None,
+      'categories': None,
+      'nodes': None,
+      'styles': None,
     }
     for ws in fetched_worksheets.entry:
       title = ws.title.text
-      if title == CATEGORIES_WORKSHEET_TITLE:
-        worksheets["categories"] = ws
-      elif title == NODES_WORKSHEET_TITLE:
-        worksheets["nodes"] = ws
-      elif title == STYLES_WORKSHEET_TITLE:
-        worksheets["styles"] = ws
+      if CATEGORIES_WORKSHEET_TITLE == title:
+        worksheets['categories'] = ws
+      elif NODES_WORKSHEET_TITLE == title:
+        worksheets['nodes'] = ws
+      elif STYLES_WORKSHEET_TITLE == title:
+        worksheets['styles'] = ws
     return worksheets
 
   def _extract_rows(self, spreadsheet_id, worksheet, hasher):
@@ -72,7 +72,7 @@ class SimpleSpreadsheetsClient(SpreadsheetsClient):
     return rows.values()
 
   def GetCategories(self, spreadsheet_id):
-    categories_ws = self.GetCustomWorksheets(spreadsheet_id)["categories"]
+    categories_ws = self.GetCustomWorksheets(spreadsheet_id)['categories']
     if categories_ws:
       return self._extract_rows(
         spreadsheet_id,
@@ -83,7 +83,7 @@ class SimpleSpreadsheetsClient(SpreadsheetsClient):
     return []
 
   def GetNodes(self, spreadsheet_id):
-    nodes_ws = self.GetCustomWorksheets(spreadsheet_id)["nodes"]
+    nodes_ws = self.GetCustomWorksheets(spreadsheet_id)['nodes']
     if nodes_ws:
       return self._extract_rows(
         spreadsheet_id,
@@ -99,7 +99,7 @@ class SimpleSpreadsheetsClient(SpreadsheetsClient):
     @Returns:
       Dict of CSS classname ->attributes
     """
-    styles_ws = self.GetCustomWorksheets(spreadsheet_id)["styles"]
+    styles_ws = self.GetCustomWorksheets(spreadsheet_id)['styles']
     styles = defaultdict(list)
     if styles_ws:
       cells = self.get_cells(
@@ -135,7 +135,7 @@ class SimpleSpreadsheetsClient(SpreadsheetsClient):
     a table of simple class names and attributes.
 
     @Returns:
-      Single string containing the custom css.
+      Single string containing the custom css, or the empty string.
     """
 
     css_ws = self.GetCustomWorksheets(spreadsheet_id)['styles']
@@ -144,4 +144,4 @@ class SimpleSpreadsheetsClient(SpreadsheetsClient):
       # TODO(keroserene): Make this more sensible.
       css_cell = self.get_cell(
           spreadsheet_id, css_ws.get_worksheet_id(), 2, 4)
-      return css_cell.content.text
+      return css_cell.content.text or ''

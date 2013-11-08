@@ -1,4 +1,4 @@
-"""Django-based models for Visualization Graphs."""
+"""Django-based models for Visualization Viss."""
 
 import logging
 
@@ -14,7 +14,7 @@ class BaseModel(ndb.Model):
   modified = ndb.DateTimeProperty(auto_now=True)
 
 
-class Graph(BaseModel):
+class Vis(BaseModel):
   """Basic metadata required for a single visualization."""
   name = ndb.StringProperty()
   user_id = ndb.StringProperty(required=True, verbose_name='User ID')
@@ -27,13 +27,13 @@ class Graph(BaseModel):
     return self.name
 
   def to_dict(self):
-    data = super(Graph, self).to_dict()
+    data = super(Vis, self).to_dict()
     data.update({ 'id': self.key.id() })
     return data
 
 
 class ErrorLog(BaseModel):
-  graph = ndb.KeyProperty(Graph, required=True)
+  vis = ndb.KeyProperty(Vis, required=True)
   json_log = ndb.JsonProperty(repeated=True)
 
   def __unicode__(self):
@@ -44,7 +44,7 @@ class Node(BaseModel):
   """Data for a single node in a visualization."""
   is_category = ndb.BooleanProperty(default=False)
   name = ndb.StringProperty(required=True)
-  graph = ndb.KeyProperty(Graph, required=True)
+  vis = ndb.KeyProperty(Vis, required=True)
   short_description = ndb.TextProperty(verbose_name='Short Description')
   long_description = ndb.TextProperty(verbose_name='Long Description')
   context_url = ndb.StringProperty(verbose_name='Context URL')
@@ -80,6 +80,6 @@ class Node(BaseModel):
 
 
 class Style(BaseModel):
-  graph = ndb.KeyProperty(Graph, required=True)
+  vis = ndb.KeyProperty(Vis, required=True)
   styles = ndb.TextProperty()
   # generic_css = ndb.TextProperty()

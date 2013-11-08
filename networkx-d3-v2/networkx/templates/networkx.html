@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% comment %}
 This is the primary template file for the network x visualizer.
-It's a 'single-page' UI which wraps the stand-alone graph viewer templates
+It's a 'single-page' UI which wraps the stand-alone vis viewer templates
 with administrative functionality.
 {% endcomment %}
 {% load url from future %}
@@ -18,7 +18,7 @@ with administrative functionality.
 {% block nav %}
 <div class="topbar">
   <a class="title" href="/">Network Visualizer X</a>
-  <span id="view-name">{{ graph.name }}</span>
+  <span id="view-name">{{ vis.name }}</span>
   <span id="links">
     {% if google_user %}
       <span class="navbar-text">{{ google_user.email }}</span> |
@@ -35,8 +35,8 @@ with administrative functionality.
   {% csrf_token %}
 
 {% comment %}
-This is the actual visualization viewport. The stand-alone graph is rendered
-within a graph. Formctionality relating specifically to interacting with
+This is the actual visualization viewport. The stand-alone vis is rendered
+within a vis. Formctionality relating specifically to interacting with
 individual nodes, edges, etc. will be self-contained within the IFRAME with
 a handful of external parameters available. Formctionality relating to
 interacting with the overall visualization entries-list and aggregate info
@@ -51,12 +51,12 @@ will remain outside the IFRAME in the scope of this UI.
 
 {# List of all visualizations as a clickable entry. #}
 <div id="vis-index" style="display: none">
-  {% if graphs %}{% for graph in graphs %}
-  <div id="v-{{ graph.key.id }}"
+  {% if index %}{% for vis in index %}
+  <div id="v-{{ vis.id }}"
        class="vis-entry
-       {% if vis_id and vis_id == graph.key.id %}selected{% endif%}">
+       {% if vis_id and vis_id == vis.id %}selected{% endif%}">
     <div class="vis-entry-name">
-      {{ graph.name }}
+      {{ vis.name }}
     </div>
   </div>
   {% endfor %}{% endif %}
@@ -105,7 +105,7 @@ will remain outside the IFRAME in the scope of this UI.
   <div class="text small center">
     <p>A tool that makes it simple for NGOs to
     generate visualizations of networks of support.
-    It can also be used to create network graphs for other types of data.</p>
+    It can also be used to create network viss for other types of data.</p>
     <p>To get started, login with your google account.</p>
   </div>
   <a class="btn red" href="{% url 'login' %}">Login</a>
