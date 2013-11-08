@@ -523,7 +523,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     $saveNodes.click (e) ->
       e.preventDefault()
       # This function lives inside graph.coffee.
-      queryString = gView.hook.getPositionQuery()
+      queryString = gView.hook.getStateQuery()
       updateUrl = '?' + queryString
       window.history.pushState({}, 'unused', updateUrl)
       # TODO(keroserene): Push changes to the underlying document.

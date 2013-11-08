@@ -26,7 +26,7 @@ div, a, code, #view, #create-pane, .hidden {
 }
 h2 { font-size: 16px; cursor: default; }
 
-.hidden { opacity: 0.0 !important; }
+.hidden { opacity: 0.0 !important; pointer-events: none; }
 
 .btn, .btn:visited {
   position: relative; display: inline-block;

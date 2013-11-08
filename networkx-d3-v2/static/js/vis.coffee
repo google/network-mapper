@@ -95,10 +95,20 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       @nodeInfos = [];     # Array of all node details.
       @activeNode = null;  # Currently hovered / dragged node.
 
-      # Smoothing parameters.
-      @targetScale = 1.0
-      @actualTranslate = [0,0]
+      # Check for custom positions for fixed nodes, and zoom params.
+      # The format for each node query is node_id=x+y, and the format for zoom
+      # params is scale=s, translate=x+y
+      queries = NetX.getQueryString()
+      # Custom zoom parameters.
+      @targetScale = queries.scale || 1.0
       @actualScale = @targetScale
+      @actualTranslate = [0,0]
+      if queries.translate
+        @actualTranslate = queries.translate.split(',').map parseFloat
+        @zoom.translate(@actualTranslate)
+        console.log @actualTranslate
+      @zoom.scale(@actualScale)
+      @startPositions = @setupStartPositions queries
       @isZooming = false
 
       # Initialize this d3 Force Layout.
@@ -110,13 +120,6 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
         .theta(0.95)   # Higher theta => more approximate but faster.
         .linkStrength(0.9)
         .linkDistance((o,i) -> 20 + (o.source.importance * o.target.importance))
-
-      # Check for custom positions for fixed nodes.
-      # The format for each query string is node_id=x+y
-      queries = NetX.getQueryString()
-      console.log queries
-
-      @startPositions = @setupStartPositions queries
 
       # Fetch the actual visualization JSON data.
       url = '/data/' + @id
@@ -269,10 +272,14 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       drag.on('dragend.label-highlight', listenerFactory(false))
       @
 
+    # Get positions of all fixed nodes, and concatenate with scale and
+    # translate.
     getStateQuery: () ->
       @nodeInfos.filter((n) -> n.isFixed)
-        .map((n) -> n.getStateQuery())
+        .map((n) -> n.getPositionQuery())
         .join('&')
+        .concat('&scale=' + @actualScale)
+        .concat('&translate=' + @actualTranslate)
 
     # Event handler for hover updates. Hover only activates if one is not
     # actively dragging another node.
@@ -324,16 +331,14 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
         '<br>X: ' + @data.x.toFixed(@ROUNDING_POINT) +
         '<br>Y: ' + @data.y.toFixed(@ROUNDING_POINT)
 
-    getStateQuery: () -> @id + '=' + @data.x.toFixed(@ROUNDING_POINT) +
+    getPositionQuery: () -> @id + '=' + @data.x.toFixed(@ROUNDING_POINT) +
                                   '+' + @data.y.toFixed(@ROUNDING_POINT)
-
 
   # Zoom/Drag smoothing.
   SMOOTHING = {
     ENABLED: false
     MAX_INVERT: 1.25
   }
-
 
   ###
   Description of a set of labels on nodes, primarily in order to determine
@@ -434,11 +439,15 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       # getBBox doesn't include attr translation/scaling, so recalculate.
       tXmin = -(rawCenterX * scale)
       tYmin = -(rawCenterY * scale)
-      # Bound the translation coordinate between a minimum and a maximum.
-      tX = NetX.bound(translate[0], tXmin, @width + tXmin)
-      tY = NetX.bound(translate[1], tYmin, @height + tYmin)
-      translate = [tX, tY]
-      @zoom.translate(translate)
+      console.log tXmin, tYmin
+      if 0 == tXmin && 0 == tYmin
+        [tX, tY] = translate
+      else
+        # Bound the translation coordinate between a minimum and a maximum.
+        tX = NetX.bound(translate[0], tXmin, @width + tXmin)
+        tY = NetX.bound(translate[1], tYmin, @height + tYmin)
+        translate = [tX, tY]
+        @zoom.translate(translate)
 
       if SMOOTHING.ENABLED
         @targetScale = scale
