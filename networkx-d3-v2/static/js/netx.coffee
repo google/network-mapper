@@ -95,6 +95,11 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       @$viewMode = $ '#vis-view-mode'
       @$edit = $ '#btn-edit'
       @$docs = $ '#btn-docs'
+      # For the sharing box.
+      @shareBoxVisible = false
+      @$shareBox = $ '#share-content'
+      @$snippet = $ '#snippet'
+      @$standaloneLink = $ '#standalone-link'
 
     show: (viewMode=true) ->
       if viewMode
@@ -103,6 +108,17 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         fadeHide @$viewMode
       fadeShow @$actions
     hide: -> fadeHide @$actions
+
+    toggleShareBox: ->
+      @shareBoxVisible = not @shareBoxVisible
+      @$shareBox.toggleClass 'hidden', not @shareBoxVisible
+      if @shareBoxVisible
+        standaloneUrl = '/view/' + getCurrentVisualization().id + '/standalone'
+        embedCode = '<iframe src="' + HOSTNAME + standaloneUrl +
+                    '" width="1000" height="600"></iframe>'
+        @$snippet.text embedCode
+        @$snippet.select()  # Auto-hilight the embed code.
+        @$standaloneLink.attr('href', standaloneUrl)
 
 
   # Holds state about the edit/create visualization form.
@@ -504,7 +520,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     $embed = $ '#btn-embed'
     $embed.click (e) ->
       e.preventDefault()
-      console.log 'share link'
+      gActions.toggleShareBox()
 
     $saveNodes = $ '#btn-save-positions'
     $saveNodes.click (e) ->
@@ -538,10 +554,13 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     hookTooltip $docs, 'open underlying spreadsheet'
     hookTooltip $saveNodes, 'save node positions'
 
+    # Catch 'escape' events as 'going backwards'
     $(document).keydown (e) ->
-      # Catch 'escape' as equivalent to clicking the back button.
       if e.keyCode is 27
-        $back.click()
+        if gActions.shareBoxVisible
+          gActions.toggleShareBox()
+        else
+          $back.click()
 
     # Primary button handlers.
     # The "save" button switches innerHTML between "Save" and "Create"
@@ -553,19 +572,12 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       returnToIndex()
 
     ###
-    $('#btn-embed').click(toggleEmbedLink);
-    # Tooltips.
-    $('#btn-refresh').hover(
-      function() { showToolTip($('#tooltip-refresh')); },
-      function() { hideToolTip($('#tooltip-refresh')); });
-
     # Help
     $('#link-help').click(function(ev) {
       ev.preventDefault();
       window.history.pushState({}, 'unused', '/help/');
       showHelp();
     });
-
     #Dark mode
     $('#darkmode').click(function() {
       var vis = gDOM.graphFrame.contents();

@@ -84,12 +84,18 @@ will remain outside the IFRAME in the scope of this UI.
     <button id="btn-refresh" class="action"></button>
     <button id="btn-save-positions" class="action"></button>
     <a href="google.com" target="_blank" id="btn-docs" class="action"></a>
-    <button id="btn-embed" class="action"></button>
+    <div id="share-box">
+      <button id="btn-embed" class="action"></button>
+      <div id="share-content" class="hidden">
+        <h2>Embed this visualization</h2>
+        <textarea id="snippet" readonly>N/A</textarea>
+        <a href="" id="standalone-link">View Standalone</a>
+      </div>
+    </div>
   </div>
 
   <span id="tooltip" class="hidden"></span>
 
-  <textarea id="snippet" class="hidden" readonly>N/A</textarea>
 </div>
 
 </form>

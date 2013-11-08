@@ -193,17 +193,29 @@ input[type=checkbox]:checked::after, .fakecheckbox.checked::after {
 }
 
 .divider { padding: 0 10px; color: #aaa; }
-
+#share-box { position: relative; }
+#share-content {
+  position: absolute; left: 80px; top: 0;
+  font-size: 10px;
+  text-align: right;
+}
+#share-content h2 {
+  font-size: 9px; position: absolute; left: 10px; bottom: 0;
+  background-color: #888; padding: 0px 8px; color: #000;
+  z-index: 400; pointer-events: none;
+  font-weight: 100;
+  opacity: 0.9;
+}
 #snippet {
-  position: absolute;
-  display: block; width: 240px; height: 50px;
-  margin: 4px; padding: 8px 12px;
+  position: relative; display: block;
+  width: 240px; height: 70px;
+  padding: 8px 12px;
   background-color: #222; color: #eee;
   border: 1px solid #333;
-  font-size: 10px;
+  font-size: 9px;
   resize: none; overflow: hidden;
-  opacity: 0.8;
-  cursor: default;
+  opacity: 0.8; cursor: default;
+  box-shadow: 1px 2px 5px #888;
 }
 #snippet:hover { background-color: #000; }
 #snippet:active, #snippet:focus {
