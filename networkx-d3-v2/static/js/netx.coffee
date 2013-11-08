@@ -288,6 +288,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       # The script for running the d3 visualization code may be dynamically
       # loaded, once, when necessary.
       @_visCodeLoaded = false
+      @hook = null  # To contain the export from vis.coffee.
 
     edit: -> @editMode = true
 
@@ -309,11 +310,14 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       @$view.load url + ' #ajax-view', =>
         @$loading.hide()
         if not @_visCodeLoaded
-          @_visCodeLoaded = true
-          console.log 'Loading vis scripts...'
-          require ['cs!vis']
+          # Load the vis.coffee module.
+          require ['cs!vis'], (vis) =>
+            @hook = vis
+            @_visCodeLoaded = true
+            console.log 'Loaded vis script.'
         else
-          window.initVisualization VIS_ID
+          @hook.render VIS_ID
+
       @$view.removeClass('hidden')
       @$view.show()
 
@@ -339,12 +343,10 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       fadeHide @$loading
       fadeHide @$view
       window.history.pushState({}, null, '/')
-      window.addEventListener 'popstate', (e) => @show @currentID
+      oldId = @currentId
+      window.addEventListener 'popstate', (e) => @show oldId
       @currentID = null
       @$name.html ''
-      # Conceal any open dialogues.
-      # if $('#btn-embed').hasClass('active')
-        # toggleEmbedLink()
 
 
   ###
@@ -399,29 +401,24 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
   returnToIndex = null
 
   # Opens up a visualization and prepares all state.
-  viewVisualization = (vis) ->
+  # |automatic| indicates whether this viewing was given as initial state in the
+  # URL. Defaults to false, for when the user manually selects from the index.
+  viewVisualization = (vis, automatic=false) ->
     vis.entry.addClass 'selected'
     gActions.show()
     console.log('showing', vis)
-    # Slightly delay the actual loading of the visualization.
-    # window.setTimeout (=> gView.show(vis.id)), 300
     gView.show(vis.id)
     # Change spreadsheet target.
-    console.log vis
     gActions.$docs.attr(
-        'href',
-        'https://docs.google.com/spreadsheet/ccc?key=' + vis.url)
+        'href', 'https://docs.google.com/spreadsheet/ccc?key=' + vis.url)
 
     # hideHelp()
-    # To be closed upon successful loading, or an error message appears.
-    # if id isnt gCurrentGraphID
-      # gButter.show('Loading...', false)
-    # Use pushState to update the browser's URL.
-    window.history.pushState({}, null, '/view/' + vis.id)
-    window.addEventListener 'popstate', (e) =>
-      # Allow the back-button to restore previous state.
-      e.preventDefault()
-      returnToIndex()
+    # Simulate URL changes.
+    if not automatic
+      window.history.pushState({}, null, '/view/' + vis.id)
+      window.addEventListener 'popstate', (e) =>
+        e.preventDefault()
+        returnToIndex()
 
   # Installs the click handler on a visualization entry in the index.
   hookVisEntry = (vis) -> vis.entry.click => viewVisualization vis
@@ -526,8 +523,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     $saveNodes.click (e) ->
       e.preventDefault()
       # This function lives inside graph.coffee.
-      # queryString = gView.$frame[0].contentWindow.getPositionQuery()
-      queryString = window.getPositionQuery()
+      queryString = gView.hook.getPositionQuery()
       updateUrl = '?' + queryString
       window.history.pushState({}, 'unused', updateUrl)
       # TODO(keroserene): Push changes to the underlying document.
@@ -592,7 +588,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
 
     # Auto-view visualization if specified in URL.
     if VIS_ID
-      viewVisualization gIndex.visByID[VIS_ID]
+      viewVisualization gIndex.visByID[VIS_ID], automatic=true
       gActions.show()
     else
       gIndex.show()
