@@ -153,6 +153,9 @@ input[type=text]:focus {
   border: 1px solid #4d90fe;
   outline: none;
 }
+input[type=text].invalid {
+  border-color: #a00; color: #a00; background-color: #f88;
+}
 input[type=checkbox], input[type=radio], .fakecheckbox, .fakeradio{
   -webkit-appearance: none;
   width: 13px;
@@ -167,18 +170,22 @@ input[type=checkbox], input[type=radio], .fakecheckbox, .fakeradio{
   box-sizing: border-box;
   cursor:default;
   position:relative;
+  outline: none;
 }
 input[type=checkbox]:active, input[type=radio]:active,
 .fakecheckbox:active, .fakeradio:active{
   border-color:#666;
   background:#ebebeb;
 }
-input[type=checkbox]:hover, input[type=radio]:hover, .fakecheckbox:hover, .fakeradio:hover{
+input[type=checkbox]:hover, input[type=checkbox]:focus,
+input[type=radio]:hover, input[type=radio]:focus,
+.fakecheckbox:hover, .fakeradio:hover{
   border-color:#666;
   -webkit-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.1);
   -moz-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.1);
   box-shadow: inset 0px 1px 1px rgba(0,0,0,0.1);
 }
+
 input[type=radio], .fakeradio{ border-radius:50%; width: 15px; height: 15px; }
 input[type=checkbox]:checked::after, .fakecheckbox.checked::after {
   content:url('gfx/check_no_box.png');
@@ -302,11 +309,10 @@ input[type=checkbox]:checked::after, .fakecheckbox.checked::after {
 
 /* Visualization edit & create forms. */
 #vis-form-panel {
-  position: fixed; z-index: 300;
-  left: 90px; top: 30px;
-  border: 1px solid #eee;
-  padding: 16px;
-  background-color: rgba(255,255,255,0.9);
+  position: fixed; z-index: 300; left: 90px; top: 30px;
+  border: 1px solid #eee;  padding: 16px;
+  color: #888; background-color: rgba(255,255,255,0.9);
+  min-width: 500px;
 }
 #vis-form-panel.hidden {
   left: -500px;
@@ -320,12 +326,11 @@ input[type=checkbox]:checked::after, .fakecheckbox.checked::after {
   line-height: 21px;
 }
 #input_url {
-  width: 500px;
-  margin-top: 8px;
-  padding: 8px 16px;
-  display: inline-block;
+  display: block; width: 100%;
+  margin-top: 8px; padding: 8px 16px;
+  font-size: 10px;
 }
-#publicity_control {
+#publicity-control {
   color: #888;
   padding: 8px;
 }
@@ -475,7 +480,7 @@ input[type=checkbox]:checked::after, .fakecheckbox.checked::after {
 
 label.radio {  display: block; }
 #butterbar-container {
-  position: fixed; z-index: 200;
+  position: fixed; z-index: 500;
   width: 100%;
   top: 50px;
   text-align: center;

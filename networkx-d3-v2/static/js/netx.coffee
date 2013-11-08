@@ -109,7 +109,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
   class VisForm
     @CREATE_URL: '/create/'  # The trailing slash is important.
     @VALID_NAME = /^[\d\w\s]+$/i
-    @VALID_URL = /^https:\/\/docs.google.com\/.*?key=.*$/i
+    @VALID_URL = /^https:\/\/docs.google.com\/[\d\.\w\/]+\?key=.+$/i
 
     constructor: (@view)->
       @$form = $ '#vis-form-panel'
@@ -123,6 +123,15 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       @$save = $ '#btn-save'
       @$delete = $ '#btn-delete'
       @_spreadsheetId = ''
+      # Attach dynamic validation handlers.
+      @$nameInput.keyup =>
+        name = @$nameInput.val()
+        @$nameInput.toggleClass(
+            'invalid', name.length > 0 and not VisForm.VALID_NAME.test name)
+      @$spreadsheetInput.keyup =>
+        url = @$spreadsheetInput.val()
+        @$spreadsheetInput.toggleClass(
+            'invalid', url.length > 0 and not VisForm.VALID_URL.test url)
 
     show: () ->
       fadeShow @$form
@@ -151,9 +160,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     # Ensure the fields in the form are correct. Assumed to be called prior to
     # createVis() or updateVis()
     validate: ->
-      console.log 'validating the form'
       name = @$nameInput.val()
-      console.log 'name is: ' + name
       if not VisForm.VALID_NAME.test name
         gButter.show 'Please provide a valid name.'
         return false
@@ -163,7 +170,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         return false
       query = url.split('?key=')[1]
       @_spreadsheetId = query.split('&')[0]
-      console.log 'form is valid.'
       true
 
     saveOrCreate: () ->
@@ -233,15 +239,19 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     deleteVis: (vis) ->
       data = @$formData.serialize()
       id = vis.id
+      name = vis.name
       console.log 'Deleting ' + vis.id
       $.post '/delete/' + vis.id + '/', data, =>
         console.log 'deleted ' + id
         vis.entry.remove()
         gIndex.remove vis
+        gButter.show 'Deleted "' + name + '".'
       .fail =>
-        console.error 'failed to delete!!!'
+        console.error 'failed to delete!'
+        gButter.showError 'Failed to delete.'
         vis.entry.removeClass('deleting')
       # Remove from the DOM prematurely.
+      gButter.showPersist 'Deleting "' + vis.name + '"...'
       vis.entry.addClass('deleting')
 
 
@@ -436,7 +446,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       if gView.editMode
         # Return to view mode.
         gView.editMode = false
-        console.log 'returning from edit mode! ' + gView.currentID
         gForm.hide()
         fadeShow gActions.$viewMode
         gActions.$edit.focus()
