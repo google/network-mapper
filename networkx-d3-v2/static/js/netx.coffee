@@ -166,12 +166,12 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     createVis: () ->
       data = @$formData.serialize()
       $.post VisForm.CREATE_URL, data, =>
-        # gButter.show('Finished creation.')
+        gButter.show('Finished creation.')
         console.log 'created.'
         @view.visIndex.refresh()
         true
       name = $('#input_name').val()
-      # gButter.show('Creating new visualization "' + name  + '"...', false)
+      gButter.showPersist('Creating new visualization "' + name  + '"...')
       console.log 'New Visualization [' + name + ']  ......'
       # Create placeholder DOM element.
       @$create.before '<div id="pending" class="vis-entry"></div>'
@@ -183,22 +183,21 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     Update visualization's meta-data.
     ###
     updateVis: (vis) ->
-      sMatch = @$spreadsheetInput.val().match(/ccc\?key=(.*)/)
-      if null == sMatch
+      # sMatch = @$spreadsheetInput.val().match(/\?key=(.*)/)
+      newSpreadsheet = @$spreadsheetInput.val().split('?key=')[1].split('&')[0]
+      if null == newSpreadsheet
         # gButter.showError('Invalid spreadsheet URL.')
         console.log 'invalid'
         return false
-      newSpreadsheet = sMatch[1]
+      # newSpreadsheet = sMatch[1]
       oldSpreadsheet = vis.url
       oldID = vis.id
       data = @$formData.serialize()     # Trailing slash is vital.
       $.post '/update/' + vis.id + '/', data, =>
         gButter.show('Updated.')
-        console.log 'updated'
         # Refresh if spreadsheet changed and still viewing current graph.
-        console.log('spreadsheets: ' + newSpreadsheet + ' ' + oldSpreadsheet)
-        if (newSpreadsheet != oldSpreadsheet)# && gCurrentGraphID == cachedGraphID)
-          setTimeout gView.refresh, 100
+        if (newSpreadsheet != oldSpreadsheet) # && gCurrentGraphID == cachedGraphID)
+          setTimeout (=> gView.refresh()), 100
         newName = @$nameInput.val()
         # Update local data model and DOM.
         vis.name = newName
@@ -206,7 +205,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         vis.url = newSpreadsheet
         vis.isPublic = @$publicInput.checked
         @view.$name.html newName
-      gButter.show('Updating details...', false)
+      gButter.showPersist('Updating visualization details...')
       true
 
     # Delete a visualization from the index.
@@ -275,7 +274,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     # Refresh the currently viewed graph.
     refresh: () ->
       return if not @currentID
-      console.log 'refreshing'
+
       cachedGraphID = @currentID  # In case user loads another graph.
       $.get '/refresh/' + @currentID + '/', [], () =>
         # Success callback which updates butterbar and DOM.
@@ -285,7 +284,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
           @show @currentID
       # $('#btn-refresh').addClass('disabled')
       # hideToolTip($('#tooltip-refresh'))
-      gButter.show('Refreshing data from spreadsheet...', false)
+      gButter.showPersist('Refreshing data from spreadsheet...')
 
     # Clears everything from the AJAX viewport. Used prior to loading any new
     # view, or when opening the create visualization pane.
@@ -312,20 +311,30 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       @text = $ '#butterbar-text'
       @dismissButton = $ '#butterbar-dismiss'
       @dismissButton.click( => @hide())
+      @_timer = undefined
 
+    # Shows a butterbar message. Defaults to auto-hiding after a short while.
     show: (message, autohide=true) ->
       return if not message
       @reset()
       this.text.html message
       this.bar.removeClass 'hidden'
+      # Anytime a new message is shown, override any previous autohide timers since
+      # they're no longer relevant.
+      if @_timer
+        clearTimeout @_timer
+        @_timer = undefined
       if autohide
-        timeout = setTimeout =>
+        @_timer = setTimeout =>
           @bar.addClass 'hidden'
+          @_timer = undefined
         , @TIMEOUT_MS
+
+    showPersist: (message) -> @show(message, autohide=false)
 
     showError: (message) ->
       @reset()
-      @show('ERROR: ' + message, false)
+      @showPersist('ERROR: ' + message)
       @bar.addClass 'error'
       @dismissButton.removeClass 'hidden'
       @dismissButton.show()
@@ -369,8 +378,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       returnToIndex()
 
   # Installs the click handler on a visualization entry in the index.
-  hookVisEntry = (vis) ->
-    vis.entry.click => viewVisualization vis
+  hookVisEntry = (vis) -> vis.entry.click => viewVisualization vis
 
   getCurrentVisualization = -> gIndex.visByID[gView.currentID]
 
