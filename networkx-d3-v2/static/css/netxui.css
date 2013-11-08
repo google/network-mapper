@@ -297,9 +297,10 @@ input[type=checkbox]:checked::after, .fakecheckbox.checked::after {
   opacity: 0.4;
   background: transparent center center no-repeat;
   background-size: 24px;
+  cursor: pointer; outline: none;
 }
-.action:hover { opacity: 0.8; cursor: pointer; }
-.action:focus { opacity: 1; outline: none; }
+.action:focus { opacity: 0.7; }
+.action:hover, .action:active { opacity: 0.9; }
 #btn-back { background-image: url('gfx/back_arrow.png'); }
 #btn-refresh { background-image: url('gfx/refresh.svg'); }
 #btn-edit { background-image: url('gfx/settings.svg'); }
