@@ -20,7 +20,6 @@ from auth.utils import GetCurrentCredentials
 from auth.mixins import OAuth2RequiredMixin
 from clients.drive import SimpleDriveClient
 
-from .forms import VisForm, DeleteVisForm
 from .models import Vis, Node, ErrorLog, Style
 import vis_utils as VisUtils
 
@@ -122,16 +121,6 @@ class NodeDetail(_VisBaseView):
       raise Http404
 
 
-class VisFormMixin(object):
-  """Base for a form handler."""
-  template_name = 'graph_form.html'
-  form_class = VisForm
-
-  def form_valid(self, form):
-    form.save()  # Causes a save OR a create.
-    return HttpResponse('success')  # No actual response URL.
-
-
 class VisFetchingMixin(object):
   """Authenticates the graph fetch."""
   def dispatch(self, request, *args, **kwargs):
@@ -154,12 +143,6 @@ class VisFetchingMixin(object):
       'vis': self.vis
     })
     return context
-
-
-class CreateVis(OAuth2RequiredMixin, VisFormMixin, FormView):
-  def dispatch(self, *args, **kwargs):
-    self.user = users.get_current_user()
-    return super(CreateVis, self).dispatch(*args, **kwargs)
 
 
 def getVis(vis_id):
@@ -212,31 +195,10 @@ def refreshVis(request, vis_id):
 
 
 def deleteVis(request, vis_id):
-  pass
-
-
-class DeleteVis(OAuth2RequiredMixin, VisFetchingMixin, FormView):
-  template_name = 'confirm_delete.html'
-  form_class = DeleteVisForm
+  """Handler which deletes a visualization from the index."""
   # TODO: indicate that it doesn't delete the google doc.
-
-  def get_initial(self):
-    return self.vis.to_dict()
-
-  def form_valid(self, form):
-    """Validate the form and delete the visualization."""
-    logging.info('Deleting %s', self.vis.key)
-    form.delete(self.vis)
-    messages.info(self.request, 'Vis deleted')
-    return HttpResponse('delete.')
-
-  def get_context_data(self, *args, **kwargs):
-    ctx = super(DeleteVis, self).get_context_data(*args, **kwargs)
-    ctx.update({
-      'vis_id': self.vis_id,
-      'vis': self.vis
-    })
-    return ctx
+  VisUtils.deleteVisualization(authenticate(request, getVis(vis_id)))
+  return HttpResponse('deleted.')
 
 
 class ErrorLog(OAuth2RequiredMixin, VisBaseMixin,

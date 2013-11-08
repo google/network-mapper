@@ -3,6 +3,7 @@
 import datetime
 import httplib2
 import logging
+import thread
 
 from django.core.validators import URLValidator
 from google.appengine.ext import ndb
@@ -47,7 +48,6 @@ def generateData(vis):
     node_data['node_style'] = node.node_style or ''
     node_data['label_style'] = node.label_style or ''
     node_data['importance'] = node.importance or 1
-
     # if node_data['credit'] and node_data['credit'].startswith("http://"):
     #   node_data['credit'] = '<a href="%(link)s" target="_blank">%(link)s</a>' % {"link": node_data['credit']}
 
@@ -70,6 +70,7 @@ def _KeysToDelete(model_class, ancestor_key):
 
 def generateNodesFromSpreadsheet(vis):
   """Parse spreadsheet data into nodes from vis."""
+  logging.info('Generating data using spreadsheet id: %s', vis.spreadsheet_id)
   storage = StorageByKeyName(CredentialsModel, vis.user_id, 'credentials')
   credentials = storage.get()
   # Ensure we have credentials.
@@ -178,9 +179,10 @@ def generateNodesFromSpreadsheet(vis):
 
 
 def extractIdFromUrl(url):
+  """Parse |url| hoping to get a spreadsheet id."""
   if not url:
     return 0
-  return url.split('?key=')[1].split('&')[0]
+  return url.split('?key=')[1].split('&')[0] #.split('#')[0]
 
 
 def createVisualization(data):
@@ -214,6 +216,18 @@ def saveVisualization(vis, data):
     vis.user_id = users.get_current_user().user_id()
   vis.put()
   logging.info('saving %s', vis)
+
+
+def deleteVisualization(vis):
+  """Deletes |vis| from ndb. Assumes authentication has occured."""
+  nodes = Node.query(Node.vis == vis.key)
+  vis.key.delete()  # Disappears from the index at this point.
+  # Delete the rest of the nodes in a separate thread.
+  thread.start_new_thread(_deleteNodes, (nodes,))
+  logging.info('Deleted %s', vis.key)
+
+
+def _deleteNodes(nodes): map(lambda n: n.key.delete(), nodes)
 
 
 

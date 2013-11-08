@@ -9,7 +9,6 @@ from django.views.generic import View, TemplateView, FormView
 from google.appengine.api import users
 
 from models import Vis
-from forms import VisForm
 
 
 def _fetchIndex():
@@ -35,10 +34,9 @@ def _JSONifyIndex(index):
         vis['spreadsheet_id'], vis['is_public']) for vis in index])
 
 
-class NetworkX(TemplateView, FormView):
+class NetworkX(TemplateView):
   """Handler for the single-page omni-view."""
   template_name = 'networkx.html'
-  form_class = VisForm
 
   def dispatch(self, request, *args, **kwargs):
     vis_id = int(kwargs['vis_id']) if 'vis_id' in kwargs else None
