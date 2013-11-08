@@ -291,12 +291,11 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     _loadURL: (url) ->
       console.log 'Loading AJAX: ' + url
       @$view.load url + ' #ajax-view', =>
-        # gButter.hide()
         @$loading.hide()
         if not @_visCodeLoaded
           @_visCodeLoaded = true
-          console.log 'Loading graph js for the first time...'
-          require ['cs!graph']
+          console.log 'Loading vis scripts...'
+          require ['cs!vis']
         else
           window.initVisualization VIS_ID
       @$view.removeClass('hidden')
