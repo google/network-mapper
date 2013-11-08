@@ -108,6 +108,8 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
   # Holds state about the edit/create visualization form.
   class VisForm
     @CREATE_URL: '/create/'  # The trailing slash is important.
+    @VALID_NAME = /^[\d\w\s]+$/i
+    @VALID_URL = /^https:\/\/docs.google.com\/.*?key=.*$/i
 
     constructor: (@view)->
       @$form = $ '#vis-form-panel'
@@ -120,6 +122,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       @$IDinput = $ '#input_id'
       @$save = $ '#btn-save'
       @$delete = $ '#btn-delete'
+      @_spreadsheetId = ''
 
     show: () ->
       fadeShow @$form
@@ -144,6 +147,24 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       @$publicInput.checked = false
       @$IDinput.val ''
       @$delete.hide()
+
+    # Ensure the fields in the form are correct. Assumed to be called prior to
+    # createVis() or updateVis()
+    validate: ->
+      console.log 'validating the form'
+      name = @$nameInput.val()
+      console.log 'name is: ' + name
+      if not VisForm.VALID_NAME.test name
+        gButter.show 'Please provide a valid name.'
+        return false
+      url = @$spreadsheetInput.val()
+      if not VisForm.VALID_URL.test url
+        gButter.show 'Please provide a valid spreadsheet url.'
+        return false
+      query = url.split('?key=')[1]
+      @_spreadsheetId = query.split('&')[0]
+      console.log 'form is valid.'
+      true
 
     saveOrCreate: () ->
       # TODO(keroserene): Pre-validate spreadsheet url/format?
@@ -180,13 +201,13 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       true
 
     ###
-    Update visualization's meta-data.
+    Update visualization's meta-data. Assumes form is validated alreday.
     ###
     updateVis: (vis) ->
       # sMatch = @$spreadsheetInput.val().match(/\?key=(.*)/)
-      newSpreadsheet = @$spreadsheetInput.val().split('?key=')[1].split('&')[0]
+      newSpreadsheet = @_spreadsheetId  #@$spreadsheetInput.val().split('?key=')[1].split('&')[0]
       if null == newSpreadsheet
-        # gButter.showError('Invalid spreadsheet URL.')
+        gButter.showError('Invalid spreadsheet URL.')
         console.log 'invalid'
         return false
       # newSpreadsheet = sMatch[1]
@@ -433,6 +454,9 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     # Clicking 'Save' either creates or updates a visualization.
     gForm.$save.click (e) ->
       e.preventDefault()  # Prevent unnecessary postback.
+      valid = gForm.validate()
+      return false if not valid
+
       if gView.currentID
         vis = gIndex.visByID[gView.currentID]
         gForm.updateVis(vis)
