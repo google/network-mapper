@@ -87,14 +87,6 @@ class VisView(_VisBaseView, TemplateView):
     return ctx
 
 
-class Data(_VisBaseView):
-  """Obtain pure JSON data for a single graph."""
-  def get(self, request, *args, **kwargs):
-    return HttpResponse(
-        json.dumps(VisUtils.generateData(self.vis)),
-        content_type="application/json")
-
-
 class VisStandaloneView(_VisBaseView, TemplateView):
   template_name = "graph/graph_standalone.html"
 
@@ -145,17 +137,6 @@ class VisFetchingMixin(object):
     return context
 
 
-def getVis(vis_id):
-  """Fetches a Vis entity. Not authenticated."""
-  vis_id = int(vis_id)  # Casting to int is required or ndb lookup fails.
-  if not vis_id:
-    raise Http404
-  vis = Vis.get_by_id(vis_id)
-  if not vis:
-    raise Http404
-  return vis
-
-
 def authenticate(request, vis):
   """Authenticates |vis|.
 
@@ -171,6 +152,24 @@ def authenticate(request, vis):
       raise PermissionDenied
   # TODO: Ensure the id contained in request matches vis.
   return vis
+
+
+def getVis(vis_id):
+  """Fetches a Vis entity. Not authenticated."""
+  vis_id = int(vis_id)  # Casting to int is required or ndb lookup fails.
+  if not vis_id:
+    raise Http404
+  vis = Vis.get_by_id(vis_id)
+  if not vis:
+    raise Http404
+  return vis
+
+
+def getJSONData(request, vis_id):
+  """Handler which returns JSON data for a Vis."""
+  return HttpResponse(
+      json.dumps(VisUtils.generateData(authenticate(request, getVis(vis_id)))),
+      content_type="application/json")
 
 
 def createVis(request):
@@ -199,6 +198,10 @@ def deleteVis(request, vis_id):
   # TODO: indicate that it doesn't delete the google doc.
   VisUtils.deleteVisualization(authenticate(request, getVis(vis_id)))
   return HttpResponse('deleted.')
+
+
+def getLog(request, vis_id):
+  pass
 
 
 class ErrorLog(OAuth2RequiredMixin, VisBaseMixin,

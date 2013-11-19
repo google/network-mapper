@@ -25,8 +25,7 @@ urlpatterns = patterns(
     (r'^help/', ui.viewHelp),
 
     # Vis urls.
-    url(r'^data/(?P<vis_id>\d+)$',
-        google_login_required(vis.Data.as_view()), {}, name='data'),
+    (r'^data/(?P<vis_id>\d+)$', vis.getJSONData),
     url(r'^log/(?P<vis_id>\d+)$',
         google_login_required(vis.ErrorLog.as_view()), {}, name='log'),
 
