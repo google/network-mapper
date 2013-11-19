@@ -36,4 +36,3 @@ urlpatterns = patterns(
     (r'^refresh/(?P<vis_id>\d+)/$', vis.refreshVis),
     (r'^delete/(?P<vis_id>\d+)/$', vis.deleteVis),
 )
-# + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

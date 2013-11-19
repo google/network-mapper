@@ -43,7 +43,7 @@ def __initial_oauth_flow(request, approval_prompt='auto'):
     user_agent=settings.OAUTH_SETTINGS['user_agent'],
     approval_prompt=approval_prompt,
     redirect_uri=settings.OAUTH_SETTINGS['redirect_uri'],
-    access_type="online"
+    access_type='offline'  # Needs to be 'offline' for the refresh token.
   )
 
   # Generate the URL to oauth with passing the redirect URI.

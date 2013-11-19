@@ -16,6 +16,18 @@ from .vis_conf import MAX_IMPORTANCE, MIN_IMPORTANCE, ERROR_MESSAGES
 from .models import Vis, Node, ErrorLog, Style
 
 
+def acquireLatestCredentials(user_id):
+  """Returns credentials, and refreshes them if necessary."""
+  storage = StorageByKeyName(CredentialsModel, user_id, 'credentials')
+  credentials = storage.get()
+  if credentials.access_token_expired:
+    logging.info('Credentials expired. Attempting to refresh...')
+    credentials.refresh(httplib2.Http())
+    storage.put(credentials)
+    logging.info('Successfully refreshed access token!')
+  return credentials
+
+
 def generateData(vis):
   """generate the entirety of data for a single vis."""
   from .models import Node
@@ -71,14 +83,8 @@ def _KeysToDelete(model_class, ancestor_key):
 def generateNodesFromSpreadsheet(vis):
   """Parse spreadsheet data into nodes from vis."""
   logging.info('Generating data using spreadsheet id: %s', vis.spreadsheet_id)
-  storage = StorageByKeyName(CredentialsModel, vis.user_id, 'credentials')
-  credentials = storage.get()
-  # Ensure we have credentials.
-  if credentials.access_token_expired:
-    http = httplib2.Http()
-    credentials.refresh(http)
-    storage.put(credentials)
 
+  credentials = acquireLatestCredentials(vis.user_id)
   # Prepare client and fetch data from a google spreadsheet.
   client = SimpleSpreadsheetsClient(credentials)
   fetched_categories = client.GetCategories(vis.spreadsheet_id)
