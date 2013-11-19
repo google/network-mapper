@@ -5,6 +5,8 @@ import ui_views as ui
 import vis_views as vis
 
 from auth.decorators import google_login_required
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = patterns(
@@ -13,14 +15,14 @@ urlpatterns = patterns(
     (r'^appengine_sessions/', include('appengine_sessions.urls')),
 
     # Primary urls.
-    url(r'^$', ui.NetworkX.as_view(), {}, name='homepage'),
-    url(r'^view/(?P<vis_id>\d+)$', ui.NetworkX.as_view(), {}, name='view'),
+    (r'^$', ui.viewUI),
+    (r'^view/(?P<vis_id>\d+)$', ui.viewVis),
     # The standalone suffix only shows the visualization - with no other UI.
     url(r'^view/(?P<vis_id>\d+)/standalone$', vis.VisView.as_view(), {}, name='view'),
     # data.json gives a list of *all* the visualizations, as opposed to data for
     # a specific visualization.
-    url(r'^data.json$', ui.NetworkXData.as_view(), {}, name='data'),
-    url(r'^help/$', ui.Help.as_view(), {}, name='help'),
+    (r'^data.json$', ui.getIndexData),
+    (r'^help/', ui.viewHelp),
 
     # Vis urls.
     url(r'^data/(?P<vis_id>\d+)$',
@@ -28,9 +30,10 @@ urlpatterns = patterns(
     url(r'^log/(?P<vis_id>\d+)$',
         google_login_required(vis.ErrorLog.as_view()), {}, name='log'),
 
-    # POST actions. All for modifying visualizations.
+    # RESTful interaction with visualizations.
     (r'^create/$', vis.createVis),
     (r'^update/(?P<vis_id>\d+)/$', vis.updateVis),
     (r'^refresh/(?P<vis_id>\d+)/$', vis.refreshVis),
     (r'^delete/(?P<vis_id>\d+)/$', vis.deleteVis),
 )
+# + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

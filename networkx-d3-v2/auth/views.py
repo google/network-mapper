@@ -17,19 +17,19 @@ logger = logging.getLogger(__name__)
 
 
 def login(request):
+  """Handler for logging in the user."""
   user = users.get_current_user()
-
   if not user:
-    logger.info("User not registered, Forcing login with users api.")
+    logger.info('User not registered, Forcing login with users api.')
     return HttpResponseRedirect(users.create_login_url(
       request.get_full_path()))
 
   credentials = GetCurrentCredentials()
   if not credentials:
-    return HttpResponseRedirect(reverse("oauth2redirect"))
+    return HttpResponseRedirect(reverse('oauth2redirect'))
 
   request.session['credentials'] = credentials
-  return HttpResponseRedirect(reverse("homepage"))
+  return HttpResponseRedirect('/')
 
 
 def __initial_oauth_flow(request, approval_prompt='auto'):

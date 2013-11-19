@@ -106,7 +106,6 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       if queries.translate
         @actualTranslate = queries.translate.split(',').map parseFloat
         @zoom.translate(@actualTranslate)
-        console.log @actualTranslate
       @zoom.scale(@actualScale)
       @startPositions = @setupStartPositions queries
       @isZooming = false
@@ -439,7 +438,6 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       # getBBox doesn't include attr translation/scaling, so recalculate.
       tXmin = -(rawCenterX * scale)
       tYmin = -(rawCenterY * scale)
-      console.log tXmin, tYmin
       if 0 == tXmin && 0 == tYmin
         [tX, tY] = translate
       else

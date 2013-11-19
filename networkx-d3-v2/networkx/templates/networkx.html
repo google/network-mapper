@@ -23,7 +23,7 @@ with administrative functionality.
     {% if google_user %}
       <span class="navbar-text">{{ google_user.email }}</span> |
       <a href="{% url 'oauth2logout' %}">Logout</a> |
-      <a id="link-help" href="{% url 'help' %}">Help</a>
+      <a id="link-help" href="/help">Help</a>
     {% endif %}
   </span>
 </div>

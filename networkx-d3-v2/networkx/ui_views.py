@@ -5,18 +5,22 @@ import logging
 
 from django.conf import settings
 from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.shortcuts import render
 from django.views.generic import View, TemplateView, FormView
+from django.views.decorators.csrf import csrf_protect
 from google.appengine.api import users
-
 from models import Vis
 
 
 def _fetchIndex():
-  """Obtain list of all visualizations."""
+  """Obtain list of all visualizations for |user|."""
   user = users.get_current_user()
-  logging.info('Fetching index for user %s', user.user_id())
+  if not user:
+    return []
+  user_id = user.user_id()
+  logging.info('Fetching index for user %s', user_id)
   try:
-    query = Vis.query(Vis.user_id == user.user_id())
+    query = Vis.query(user_id == Vis.user_id)
   except AttributeError:
     query = None
   index = []
@@ -27,54 +31,36 @@ def _fetchIndex():
 
 def _JSONifyIndex(index):
   """Return JSON formatted index."""
-  # Ordering of these attributes is important for the javascript to parse
-  # correctly.
   return json.dumps(
+      # Attribute order is important for the javascript to parse correctly.
       [(vis['id'], vis['name'],
         vis['spreadsheet_id'], vis['is_public']) for vis in index])
 
 
-class NetworkX(TemplateView):
-  """Handler for the single-page omni-view."""
-  template_name = 'networkx.html'
-
-  def dispatch(self, request, *args, **kwargs):
-    vis_id = int(kwargs['vis_id']) if 'vis_id' in kwargs else None
-    # Redirect to the public embed URL if unreachable internally.
-    # if vis_id:
-      # return HttpResponseRedirect('/vis/%s/embed/' % vis_id)
-    return super(NetworkX, self).dispatch(request, *args, **kwargs)
-
-  def get_context_data(self, **kwargs):
-    """Optional |vis_id| as a matched parameter."""
-    context = super(NetworkX, self).get_context_data(**kwargs)
-    vis = None
-    vis_id = int(kwargs['vis_id']) if 'vis_id' in kwargs else None
-    index = _fetchIndex()
-    context.update({
-        'index': index,
-        'vis_count': len(index),
-        'hostname': settings.HOSTNAME,
-        'json_data': _JSONifyIndex(index)
-    })
-    if vis_id:
-      context['vis_id'] = vis_id
-    return context
+@csrf_protect
+def viewUI(request):
+  """Handler which shows the main network mapper UI."""
+  index = _fetchIndex()
+  return render(request, 'networkx.html', {
+      'index': index,
+      'vis_count': len(index),
+      'hostname': settings.HOSTNAME,
+      'json_data': _JSONifyIndex(index),
+  })
 
 
-class NetworkXData(TemplateView):
-  """Obtain JSON data for the viss list."""
-  def get(self, request, *args, **kwargs):
-    index = _fetchIndex()
-    return HttpResponse(_JSONifyIndex(index), mimetype='application/json')
+def viewVis(request, vis_id):
+  """Handler which shows a particular visualization in the UI."""
+  # Redirect to the public embed URL if unreachable internally.
+  return HttpResponse('viewing id: %s', vis_id)
 
 
-class Help(TemplateView):
-  template_name = "help.html"
+def getIndexData(request):
+  """Handler which returns the visualization index as JSON."""
+  index = _fetchIndex()
+  return HttpResponse(_JSONifyIndex(index), mimetype='application/json')
 
-  def get_context_data(self, **kwargs):
-    context = super(Help, self).get_context_data(**kwargs)
-    context.update({
-        "section": "help"
-    })
-    return context
+
+def viewHelp(request):
+  """Handler which returns the help content."""
+  return render(request, 'help.html', {})

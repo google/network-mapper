@@ -1,11 +1,11 @@
+{% load staticfiles %}
 <!DOCTYPE html>
 <html>
   <head>
     <title>{% block title %}Network Visualizer X{% endblock %}</title>
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/netxui.css" media="all" />
-
-    <script src="{{ STATIC_URL }}js/vendor/require.js"></script>
-    <script src="{{ STATIC_URL }}js/conf/main.js"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/netxui.css' %}" media="all" />
+    <script src="{% static 'js/vendor/require.js' %}"></script>
+    <script src="{% static 'js/conf/main.js' %}"></script>
     <style>
       {% block extra_css %}
       {% endblock %}
