@@ -188,7 +188,7 @@ def updateVis(request, vis_id):
 
 def refreshVis(request, vis_id):
   """Handler which refreshes visualization's data from spreadsheet."""
-  VisUtils.generateNodesFromSpreadsheet(
+  VisUtils.generateFromSpreadsheet(
       authenticate(request, getVis(vis_id)))
   return HttpResponse('refreshed.')
 

@@ -30,10 +30,9 @@ def acquireLatestCredentials(user_id):
 
 def generateData(vis):
   """generate the entirety of data for a single vis."""
-  from .models import Node
   all_nodes = Node.query(Node.vis == vis.key,)
-  all_categories = all_nodes.filter(Node.is_category == True)
-  nodes = all_nodes.filter(Node.is_category == False)
+  all_categories = all_nodes.filter(True == Node.is_category)
+  nodes = all_nodes.filter(False == Node.is_category)
 
   vis_data = {'nodes': [], 'links': []}
   categories_position = {}
@@ -80,8 +79,8 @@ def _KeysToDelete(model_class, ancestor_key):
   return [key for key in query.iter(keys_only=True)]
 
 
-def generateNodesFromSpreadsheet(vis):
-  """Parse spreadsheet data into nodes from vis."""
+def generateFromSpreadsheet(vis):
+  """Parse spreadsheet data for the vis."""
   logging.info('Generating data using spreadsheet id: %s', vis.spreadsheet_id)
 
   credentials = acquireLatestCredentials(vis.user_id)
@@ -195,13 +194,11 @@ def createVisualization(data):
   """Creates and returns a new visualization using POST |data|."""
   logging.info('Creating new visualization...')
   newVis = Vis()
-  # newVis.user_id = users.get_current_user().user_id()
-  logging.info('user id: %s', newVis.user_id)
   saveVisualization(newVis, data)  # Will .put() into ndb.
   logging.info(
       'Creating nodes for vis %s; spreadsheet_id=%s; user_id=%s;',
       newVis.key, newVis.spreadsheet_id, newVis.user_id)
-  generateNodesFromSpreadsheet(newVis)
+  generateFromSpreadsheet(newVis)
   logging.info('New vis created. %s', newVis);
   newVis.put()
   return newVis
@@ -213,8 +210,8 @@ def saveVisualization(vis, data):
   vis.populate(
     name = data.get('name'),
     is_public = data.get('is_public', False),
-    # TODO: Make spreadsheet_id vs. spreadsheet_link actually consistent...
-    spreadsheet_id = spreadsheet_id
+    spreadsheet_id = spreadsheet_id,
+    spreadsheet_name = spreadsheet_name,
   )
   if not vis.user_id:
     # Ensure the visualization has the correct user ID.

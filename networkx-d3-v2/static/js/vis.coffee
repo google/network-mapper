@@ -129,7 +129,6 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
           @invalid = true
           return false
         @json = json
-        # TODO(keroserene): Improve loader gfx.
         @$loading.html('Initializing...')
         @setupLinks()
           .setupNodes()
@@ -140,7 +139,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
         @force
           .nodes(@json.nodes)
           .links(@json.links)
-        @labels = new LabelSet @svg   # Prepare label interactions.
+        @labels = new LabelSet @svg, @json   # Prepare label interactions.
 
         # Initialize positions of all nodes within the screen.
         @force.nodes().forEach (d, i) =>
@@ -218,11 +217,6 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
         .append('circle')
         .attr('r', @getRadiusForNode)
         .attr('class', (d) => 'node-circle ' + d.node_style || '')
-      # Add label holders.
-      @nodes
-        .append('g')
-        .attr('id', (d,i) -> 'l' + i)
-        .attr('class', (d) -> 'label ' + d.label_style || '')
       @circles = @svg.selectAll 'g.node circle'
       # Prepare all NodeInfo objects.
       @nodes.each (d, i) => @nodeInfos.push new NodeInfo(d, i)
@@ -344,8 +338,13 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
   visibility and bounds checking.
   ###
   class LabelSet
-    constructor: (svg) ->
+    constructor: (svg, json) ->
       @labels = svg.selectAll('g.label')
+        .data(json.nodes)
+        .enter()
+        .append('g')
+        .attr('id', (d,i) -> 'l' + i)
+        .attr('class', (d) -> 'label ' + d.label_style || '')
         .append('text')
         .attr('class', (d) -> 'label-text ' + (d.label_style or ''))
         .attr('text-anchor', 'middle')
@@ -397,15 +396,15 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       @labels.transition()
         .call(GeometricZoomGraph.smooth, @isZooming)
         .attr 'transform', (d) =>
-          return if undefined is d or undefined is d.label_bounds
-          voffset = 0
+          return if not d? or not d.label_bounds?
+          voffset = d.y
           if (undefined is d.short_description or '' is d.short_description)
-            voffset = (d.label_bounds.bottom - d.label_bounds.top) *
+            voffset += (d.label_bounds.bottom - d.label_bounds.top) *
                       0.3 * invertScale
           else
-            voffset = Graph.prototype.getRadiusForNode(d) +
+            voffset += Graph.prototype.getRadiusForNode(d) +
                       (d.label_bounds.bottom - d.label_bounds.top) * 0.9
-          'translate(0, ' + voffset * invertScale + ')' +
+          'translate(' + d.x + ',' + voffset * invertScale + ')' +
           'scale(' + invertScale + ')'
 
 
