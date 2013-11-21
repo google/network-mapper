@@ -1,13 +1,9 @@
 """All URL pattern matchers."""
+
 from django.conf.urls import *
-
-import ui_views as ui
-import vis_views as vis
-
-from auth.decorators import google_login_required
 from django.conf import settings
-from django.conf.urls.static import static
 
+import views
 
 urlpatterns = patterns(
     '',
@@ -15,24 +11,24 @@ urlpatterns = patterns(
     (r'^appengine_sessions/', include('appengine_sessions.urls')),
 
     # Primary urls.
-    (r'^$', ui.viewUI),
-    (r'^view/(?P<vis_id>\d+)$', ui.viewUI),
+    (r'^$', views.viewUI),
+    (r'^view/(?P<vis_id>\d+)$', views.viewUI),
     # The standalone suffix only shows the visualization - with no other UI.
-    (r'^view/(?P<vis_id>\d+)/standalone$', vis.viewVis),
+    (r'^view/(?P<vis_id>\d+)/standalone$', views.viewVis),
     # data.json gives a list of *all* the visualizations, as opposed to data for
     # a specific visualization.
-    (r'^data.json$', ui.getIndexData),
-    (r'^help/', ui.viewHelp),
+    (r'^data.json$', views.getIndexData),
+    (r'^help/', views.viewHelp),
 
     # Vis urls.
-    (r'^data/(?P<vis_id>\d+)$', vis.getJSONData),
-    (r'^log/(?P<vis_id>\d+)$', vis.getLog),
+    (r'^data/(?P<vis_id>\d+)$', views.getJSONData),
+    (r'^log/(?P<vis_id>\d+)$', views.getLog),
     # url(r'^log/(?P<vis_id>\d+)$',
-        # google_login_required(vis.ErrorLog.as_view()), {}, name='log'),
+        # google_login_required(views.ErrorLog.as_view()), {}, name='log'),
 
     # RESTful interaction with visualizations.
-    (r'^create/$', vis.createVis),
-    (r'^update/(?P<vis_id>\d+)/$', vis.updateVis),
-    (r'^refresh/(?P<vis_id>\d+)/$', vis.refreshVis),
-    (r'^delete/(?P<vis_id>\d+)/$', vis.deleteVis),
+    (r'^create/$', views.createVis),
+    (r'^update/(?P<vis_id>\d+)/$', views.updateVis),
+    (r'^refresh/(?P<vis_id>\d+)/$', views.refreshVis),
+    (r'^delete/(?P<vis_id>\d+)/$', views.deleteVis),
 )
