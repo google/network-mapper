@@ -24,119 +24,6 @@ from .models import Vis, Node, ErrorLog, Style
 import vis_utils as VisUtils
 
 
-class VisBaseMixin(object):
-  """Authenticated query for a single graph."""
-  def dispatch(self, request, *args, **kwargs):
-    self.vis_id = kwargs.get('vis_id')
-    if self.vis_id:
-      self.vis = Vis.get_by_id(int(kwargs['vis_id']))
-      if not self.vis:
-        raise Http404
-      if not self.vis.is_public:
-        user = None
-        if request.session.get('credentials', None):
-          user = users.get_current_user()
-        if not user:
-          logging.info('Visualization %s is not public. Denied.' % vis_id)
-          raise PermissionDenied
-      return super(VisBaseMixin, self).dispatch(request, *args, **kwargs)
-    raise Http404
-
-
-class _VisBaseView(VisBaseMixin, View):
-  """Base view providing only the id and main data."""
-  def get_context_data(self, *args, **kwargs):
-    ctx = super(_VisBaseView, self).get_context_data(*args, **kwargs)
-    ctx.update({
-        'vis_id': self.vis_id,
-        'vis': self.vis
-    })
-    return ctx
-
-
-class VisView(_VisBaseView, TemplateView):
-  """Standalone visualization view. Used as the basis for UI view & edits."""
-  template_name = 'vis.html'
-
-  def get_context_data(self, **kwargs):
-    ctx = {}
-    nodes = Node.query(Node.is_category == False)
-    # make a list of the categories & counts
-    category_list = Node.query(
-        Node.is_category == True,
-        Node.vis == self.vis.key)
-    nodes_by_category = SortedDict()
-    for category in category_list:
-      # search for nodes who are tagged as part of this category.
-      number = nodes.filter(Node.categories.IN([category.key])).count(limit=None)
-      nodes_by_category.update({category.name: number})
-    nodes_by_category.update({ 'total': nodes.count(limit=None) })
-
-    styles = []
-    vis_style = Style.query(Style.vis == self.vis.key)
-    for style in vis_style:
-      styles.append(style.styles)
-
-    # TODO(keroserene): Make this not defection-tracker dependent.
-    ctx.update({
-        'vis_id': self.vis_id,
-        'defections_by_category': nodes_by_category,
-        'category_list': category_list,
-        'vis_style': ''.join(styles),
-    })
-    return ctx
-
-
-class VisStandaloneView(_VisBaseView, TemplateView):
-  template_name = "graph/graph_standalone.html"
-
-
-class NodeDetail(_VisBaseView):
-  """JSON response for a single node. Detail popups should be AJAX'd."""
-  def get(self, request, *args, **kwargs):
-    if request.is_ajax():
-      message = {}
-      node = ndb.Key(
-          'Vis', int(kwargs['vis_id']),
-          'Node', int(kwargs['node_id'])).get()
-      if not node:
-        raise Http404
-      else:
-        message['name'] = node.name
-        message['short_description'] = node.short_description
-        message['long_description'] = node.long_description
-        message['context_url'] = node.context_url
-        message['defection_url'] = node.defection_url
-      myjson = json.dumps(message)
-      return HttpResponse(myjson, mimetype='application/json')
-    else:
-      raise Http404
-
-
-class VisFetchingMixin(object):
-  """Authenticates the graph fetch."""
-  def dispatch(self, request, *args, **kwargs):
-    self.vis_id = int(kwargs.get('vis_id'))
-    # if self.vis_id:
-      # self.vis = Vis.get_by_id(self.vis_id)
-      # if not self.vis:
-        # raise Http404
-      # user = users.get_current_user()
-      # if user.user_id() != self.vis.user_id:
-        # raise PermissionDenied
-    # raise Http404
-    self.vis = authenticate(request, getVis(self.vis_id))
-    return super(VisFetchingMixin, self).dispatch(request, *args, **kwargs)
-
-  def get_context_data(self, *args, **kwargs):
-    context = super(VisFetchingMixin, self).get_context_data(*args, **kwargs)
-    context.update({
-      'vis_id': self.vis_id,
-      'vis': self.vis
-    })
-    return context
-
-
 def authenticate(request, vis):
   """Authenticates |vis|.
 
@@ -178,6 +65,18 @@ def createVis(request):
   return HttpResponse('created. id: %s', vis)
 
 
+def viewVis(request, vis_id):
+  """Handler which renders the basic standalone visualization."""
+  vis = authenticate(request, getVis(vis_id))
+  styles = ''.join(map(lambda s: s.styles,
+               Style.query(Style.vis == vis.key)))
+  return render(request, 'vis.html', {
+      'vis_id': vis_id,
+      'vis': vis,
+      'vis_style': styles
+      })
+
+
 def updateVis(request, vis_id):
   """Handler which updates a visualization's meta-data."""
   VisUtils.saveVisualization(
@@ -201,26 +100,15 @@ def deleteVis(request, vis_id):
 
 
 def getLog(request, vis_id):
-  pass
-
-
-class ErrorLog(OAuth2RequiredMixin, VisBaseMixin,
-               VisFetchingMixin, TemplateView):
-  template_name = 'graph/graph_error_log.html'
-
-  def get_context_data(self, **kwargs):
-    context = super(ErrorLog, self).get_context_data(**kwargs)
-    latest_log = ErrorLog.query(ErrorLog.graph == self.vis.key).order(-ErrorLog.modified).get()
-    if latest_log and latest_log.modified >= self.vis.modified:
-      error_log = latest_log.json_log
-    else:
-      error_log = None
-    context.update({
-        'page_title': 'Vis Log',
-        'graph': self.vis,
-        'error_log': error_log
-    })
-    return context
+  """Handler which returns the log data for a visualization."""
+  vis = authenticate(request, getVis(vis_id))
+  logging.info(ErrorLog.__dict__)
+  latest_log = ErrorLog.query(ErrorLog.vis == vis.key).order(-ErrorLog.modified).get()
+  if latest_log and latest_log.modified >= vis.modified:
+    error_log = latest_log.json_log
+  # log = ErrorLog.get_by_id(vis)
+  return render(request, 'log.html', {
+      'error_log': error_log })
 
 
 # TODO(keroserene): Make this list only "valid" spreadsheets, maybe, if we even
@@ -243,4 +131,26 @@ class SpreadsheetList(View):
       request, 'graph/options_spreadsheet_form.html', {
           'spreadsheets': spreadsheets,
           'current_spreadsheet_id': spreadsheet_id})
+
+
+# class NodeDetail(_VisBaseView):
+  # """JSON response for a single node. Detail popups should be AJAX'd."""
+  # def get(self, request, *args, **kwargs):
+    # if request.is_ajax():
+      # message = {}
+      # node = ndb.Key(
+          # 'Vis', int(kwargs['vis_id']),
+          # 'Node', int(kwargs['node_id'])).get()
+      # if not node:
+        # raise Http404
+      # else:
+        # message['name'] = node.name
+        # message['short_description'] = node.short_description
+        # message['long_description'] = node.long_description
+        # message['context_url'] = node.context_url
+        # message['defection_url'] = node.defection_url
+      # myjson = json.dumps(message)
+      # return HttpResponse(myjson, mimetype='application/json')
+    # else:
+      # raise Http404
 

@@ -83,4 +83,3 @@ class Node(BaseModel):
 class Style(BaseModel):
   vis = ndb.KeyProperty(Vis, required=True)
   styles = ndb.TextProperty()
-  # generic_css = ndb.TextProperty()

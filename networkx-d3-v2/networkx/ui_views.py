@@ -38,10 +38,11 @@ def _JSONifyIndex(index):
 
 
 @csrf_protect
-def viewUI(request):
+def viewUI(request, vis_id=None):
   """Handler which shows the main network mapper UI."""
   index = _fetchIndex()
   return render(request, 'networkx.html', {
+      'vis_id': vis_id,
       'index': index,
       'vis_count': len(index),
       'hostname': settings.HOSTNAME,

@@ -393,8 +393,9 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
         , NetX.LABEL_TICK_MS
 
     transform: (invertScale) ->
-      @labels.transition()
-        .call(GeometricZoomGraph.smooth, @isZooming)
+      @labels
+      # .transition()
+        # .call(GeometricZoomGraph.smooth, @isZooming)
         .attr 'transform', (d) =>
           return if not d? or not d.label_bounds?
           voffset = d.y

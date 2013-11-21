@@ -15,3 +15,9 @@ indexes:
   - name: graph
   - name: modified
     direction: desc
+
+- kind: ErrorLog
+  properties:
+  - name: vis
+  - name: modified
+    direction: desc

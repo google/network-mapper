@@ -16,9 +16,9 @@ urlpatterns = patterns(
 
     # Primary urls.
     (r'^$', ui.viewUI),
-    (r'^view/(?P<vis_id>\d+)$', ui.viewVis),
+    (r'^view/(?P<vis_id>\d+)$', ui.viewUI),
     # The standalone suffix only shows the visualization - with no other UI.
-    url(r'^view/(?P<vis_id>\d+)/standalone$', vis.VisView.as_view(), {}, name='view'),
+    (r'^view/(?P<vis_id>\d+)/standalone$', vis.viewVis),
     # data.json gives a list of *all* the visualizations, as opposed to data for
     # a specific visualization.
     (r'^data.json$', ui.getIndexData),
@@ -26,8 +26,9 @@ urlpatterns = patterns(
 
     # Vis urls.
     (r'^data/(?P<vis_id>\d+)$', vis.getJSONData),
-    url(r'^log/(?P<vis_id>\d+)$',
-        google_login_required(vis.ErrorLog.as_view()), {}, name='log'),
+    (r'^log/(?P<vis_id>\d+)$', vis.getLog),
+    # url(r'^log/(?P<vis_id>\d+)$',
+        # google_login_required(vis.ErrorLog.as_view()), {}, name='log'),
 
     # RESTful interaction with visualizations.
     (r'^create/$', vis.createVis),
