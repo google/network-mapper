@@ -64,9 +64,8 @@ define ['domReady', 'd3', 'jquery', 'modernizr',
   # Checks thumbnail for |id|. If it doesn't exist, build it.
   checkThumbnail = (id) ->
     $.get '/thumbs/' + id + '/', (d) =>
-      console.log d
-      if not d
-        saveThumbnail
+      if not d or 'None' is d
+        saveThumbnail()
 
   ###
   Description and state-holder for a single Graph visualization.

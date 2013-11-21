@@ -187,7 +187,7 @@ def extractIdFromUrl(url):
   """Parse |url| hoping to get a spreadsheet id."""
   if not url:
     return 0
-  return url.split('?key=')[1].split('&')[0] #.split('#')[0]
+  return url.split('?key=')[1].split('&')[0].split('#')[0]
 
 
 def createVisualization(data):
@@ -211,7 +211,6 @@ def saveVisualization(vis, data):
     name = data.get('name'),
     is_public = data.get('is_public', False),
     spreadsheet_id = spreadsheet_id,
-    spreadsheet_name = spreadsheet_name,
   )
   if not vis.user_id:
     # Ensure the visualization has the correct user ID.
