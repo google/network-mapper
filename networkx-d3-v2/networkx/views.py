@@ -130,6 +130,19 @@ def getLog(request, vis_id):
       'error_log': error_log })
 
 
+@csrf_protect
+def thumbs(request, vis_id):
+  """Handler for interacting with visualization thumbnails."""
+  logging.info(request.method)
+  if 'POST' == request.method:
+    img = request.POST.get('thumb')
+    VisUtils.saveThumbnail(authenticate(request, getVis(vis_id)), img)
+    return HttpResponse('updated thumbnail for ' + vis_id)
+  elif 'GET' == request.method:
+    logging.info('getting a thumbnail.')
+    return HttpResponse(authenticate(request, getVis(vis_id)).thumbnail)
+
+
 def _fetchIndex():
   """Obtain list of all visualizations for |user|."""
   user = users.get_current_user()
@@ -151,5 +164,8 @@ def _JSONifyIndex(index):
   """Return JSON formatted index."""
   return json.dumps(
       # Attribute order is important for the javascript to parse correctly.
-      [(vis['id'], vis['name'],
-        vis['spreadsheet_id'], vis['is_public']) for vis in index])
+      [(vis['id'],
+        vis['name'],
+        vis['spreadsheet_id'],
+        vis['is_public'],
+        vis['thumbnail']) for vis in index])

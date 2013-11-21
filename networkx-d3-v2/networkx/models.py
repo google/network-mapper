@@ -23,6 +23,7 @@ class Vis(BaseModel):
   is_public = ndb.BooleanProperty(default=False)
   last_updated = ndb.DateTimeProperty(auto_now_add=True)
   spreadsheet_name = ndb.StringProperty(required=False)
+  thumbnail = ndb.BlobProperty(required=False)
 
   def __unicode__(self):
     return self.name

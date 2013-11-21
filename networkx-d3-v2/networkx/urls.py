@@ -31,4 +31,7 @@ urlpatterns = patterns(
     (r'^update/(?P<vis_id>\d+)/$', views.updateVis),
     (r'^refresh/(?P<vis_id>\d+)/$', views.refreshVis),
     (r'^delete/(?P<vis_id>\d+)/$', views.deleteVis),
+
+    # POST sends a thumbnail. GET retrievs one, if it exists.
+    (r'^thumbs/(?P<vis_id>\d+)/$', views.thumbs),
 )

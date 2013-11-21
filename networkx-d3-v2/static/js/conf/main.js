@@ -7,6 +7,7 @@ require.config( {
     d3: 'vendor/d3',
     modernizr: 'vendor/modernizr',
     backbone: 'vendor/backbone',
+    canvg: 'vendor/canvg',
     cs: 'vendor/cs',
     'coffee-script': 'vendor/coffee'
   },

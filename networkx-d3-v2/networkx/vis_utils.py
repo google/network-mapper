@@ -221,6 +221,13 @@ def saveVisualization(vis, data):
   logging.info('saving %s', vis)
 
 
+def saveThumbnail(vis, thumb_data):
+  """Update the thumbnail for |vis|."""
+  vis.populate(thumbnail = str(thumb_data),)
+  vis.put()
+  logging.info('Updated thumbnail for vis %s', vis)
+
+
 def deleteVisualization(vis):
   """Deletes |vis| from ndb. Assumes authentication has occured."""
   nodes = Node.query(Node.vis == vis.key)
@@ -231,7 +238,6 @@ def deleteVisualization(vis):
 
 
 def _deleteNodes(nodes): map(lambda n: n.key.delete(), nodes)
-
 
 
 def _ListCategories(node):

@@ -54,7 +54,10 @@ will remain outside the IFRAME in the scope of this UI.
   {% if index %}{% for vis in index %}
   <div id="v-{{ vis.id }}"
        class="vis-entry
-       {% if vis_id and vis_id == vis.id %}selected{% endif%}">
+       {% if vis_id and vis_id == vis.id %}selected{% endif%}"
+       {% if vis.thumbnail %}
+       style="background-image: url('{{ vis.thumbnail }}')"
+       {% endif %}>
     <div class="vis-entry-name">
       {{ vis.name }}
     </div>
@@ -71,6 +74,7 @@ will remain outside the IFRAME in the scope of this UI.
   Publically viewable? <input type="checkbox" name="is_public" id="input_public"></input>
   </div>
   <input type="hidden" id="input_id" name="vis_id"></input>
+  <input type="hidden" id="input_thumb" name="thumb"></input>
   <button id="btn-save" class="btn red">Save</button>
   <button id="btn-delete" class="btn red" style="display: none">Delete</button>
 </div>
@@ -98,11 +102,13 @@ will remain outside the IFRAME in the scope of this UI.
   <span id="tooltip" class="hidden"></span>
 </div>
 
+<canvas id="thumbnail-saver" width="300" heigth="200"></canvas>
 </form>
 
 <div id="help" class="hidden no-hover">
   {% include "help.html" %}
 </div>
+
 
 {% else %}  {# no |google_user| #}
 

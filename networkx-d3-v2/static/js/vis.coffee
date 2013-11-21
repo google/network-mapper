@@ -1,6 +1,7 @@
 # Graph visualizer.
-define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
-    domReady, d3, $, Modernizr, Backbone, _) ->
+define ['domReady', 'd3', 'jquery', 'modernizr',
+        'backbone', 'underscore', 'canvg'], (
+    domReady, d3, $, Modernizr, Backbone, _, canvg) ->
 
   Params = {
     NODE_INIT_RANGE: 0.5
@@ -33,6 +34,39 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
   renderVisualization = (id) ->
     console.log 'Rendering visualization id: ' + VIS_ID
     graph = new GeometricZoomGraph id
+
+  # Render the SVG to invisible canvas and save the png.
+  saveThumbnail = ->
+    [cWidth, cHeight] = [300, 200]
+    $saver = $ '#thumbnail-saver'
+    if not $saver?
+      console.warn 'No thumbnail context available for saving.'
+      return false
+    $vis = $ '#visualization'
+    if not $vis?
+      console.warn 'No visualization available to save thumbnail of.'
+    ctx = $saver[0].getContext '2d'
+    svgContent = $vis.parent()[0].innerHTML
+    size = $vis[0].getBoundingClientRect()
+    ratio = size.width / size.height
+    tWidth = cHeight * ratio
+    # TODO(keroserene): Make this more reliably centered.
+    ofsLeft = (tWidth - cWidth) / 2.0
+    ctx.clearRect(0, 0, cWidth, cHeight)
+    ctx.drawSvg(svgContent, -ofsLeft, 0, tWidth, cHeight)
+    img = $saver[0].toDataURL 'image/png'
+    $('#input_thumb').val(img)
+    data = $('#vis-form').serialize()
+    # Upload to thumbnails index.
+    $.post '/thumbs/' + graph.id + '/', data, =>
+      true
+
+  # Checks thumbnail for |id|. If it doesn't exist, build it.
+  checkThumbnail = (id) ->
+    $.get '/thumbs/' + id + '/', (d) =>
+      console.log d
+      if not d
+        saveThumbnail
 
   ###
   Description and state-holder for a single Graph visualization.
@@ -68,12 +102,6 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
           .attr('height', @height)
       @$loading = $ '#vis-loading'
       @$svg = @svg[0][0]
-      @links = undefined
-      @nodes = undefined
-      @labels = undefined
-      @circles = undefined
-      @json = undefined
-
       @nodeInfos = [];     # Array of all node details.
       @activeNode = null;  # Currently hovered / dragged node.
 
@@ -142,6 +170,8 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
 
         @force.start()
         @_hideLoading()
+
+        checkThumbnail @id
         true
 
         # End of json success callback.
@@ -647,6 +677,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
   {
       netx: NetX,
       render: renderVisualization,
+      saveThumbnail: -> saveThumbnail(),
       getStateQuery: -> graph.getStateQuery(),
       lol: 12345
   }

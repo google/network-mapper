@@ -306,7 +306,6 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     # Load a url into the AJAX viewport.
     # Requires the target URL to have a div #ajax-view.
     _loadURL: (url) ->
-      console.log 'Loading AJAX: ' + url
       @$view.load url + ' #ajax-view', =>
         @$loading.hide()
         if not @_visCodeLoaded
@@ -523,6 +522,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     $saveNodes.click (e) ->
       e.preventDefault()
       # This function lives inside graph.coffee.
+      gView.hook.saveThumbnail()
       queryString = gView.hook.getStateQuery()
       updateUrl = '?' + queryString
       window.history.pushState({}, 'unused', updateUrl)
