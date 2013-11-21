@@ -529,6 +529,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       # TODO(keroserene): Push changes to the underlying document.
 
     $docs = $ '#btn-docs'
+    $errors = $ '#btn-error-log'
 
     $tt = $('#tooltip')
     showTooltip = (tool, tip) ->
@@ -547,6 +548,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
     hookTooltip $edit, 'edit'
     hookTooltip $refresh, 'refresh visualization'
     hookTooltip $embed, 'share'
+    hookTooltip $errors, 'view error log'
     hookTooltip $docs, 'open underlying spreadsheet'
     hookTooltip $saveNodes, 'save node positions'
 

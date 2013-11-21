@@ -32,11 +32,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
   # Primary entry point for rendering the visualization.
   renderVisualization = (id) ->
     console.log 'Rendering visualization id: ' + VIS_ID
-    graph = new GeometricZoomGraph {
-        width: window.innerWidth
-        height: window.innerHeight
-        id: id
-    }
+    graph = new GeometricZoomGraph id
 
   ###
   Description and state-holder for a single Graph visualization.
@@ -45,29 +41,17 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
   class Graph
 
     # Build a new visualization.
-    # |options| is expected to contain an id.
-    constructor: (options) ->
-      [@width, @height] = [options.width, options.height]
+    # |id| is the app-engine's ID for the visualization.
+    constructor: (@id) ->
+      # Default the size to the current window.
       @minScale = 0.5
       @maxScale = 8
+      @setupSize window.innerWidth, window.innerHeight
       @detailInterval_ = null  # Hover-activated single-node detail pane.
-
       _.bindAll @, 'tickUpdate', 'getRadiusForNode'
-      @setupSize @width, @height
 
       # Construct scaling functions.
-      @xScale = d3.scale.linear().domain([0,@width]).range([0,0])
-      @yScale = d3.scale.linear().domain([0,@height]).range([0,0])
-      @zoomRange = d3.scale.linear()
-          .domain([@minScale, @maxScale])
-          .rangeRound([@minScale, @maxScale])
-          .clamp(true)
-          .nice()
-      @zoom = d3.behavior.zoom()
-          .x(@xScale)
-          .y(@yScale)
-          .scaleExtent([@minScale, @maxScale])
-          .on('zoom', (e) => @tickUpdate(e))
+      @setupZoom()
 
       # Inject SVG element into the DOM.
       @svgContext = d3.select('.graph')
@@ -84,13 +68,11 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
           .attr('height', @height)
       @$loading = $ '#vis-loading'
       @$svg = @svg[0][0]
-      @id = options.id
       @links = undefined
       @nodes = undefined
       @labels = undefined
       @circles = undefined
       @json = undefined
-      @pointsQuadTree_ = undefined
 
       @nodeInfos = [];     # Array of all node details.
       @activeNode = null;  # Currently hovered / dragged node.
@@ -161,9 +143,11 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
         @force.start()
         @_hideLoading()
         true
-        # End of json success callback.
 
+        # End of json success callback.
     _.extend(Graph.prototype, Backbone.Events)
+
+    start: ->
 
     _hideLoading: ->
       @$loading.html('')
@@ -173,10 +157,23 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
       importance = d.importance or 1
       Math.max(5, importance * 2)
 
+    # Set up the zoom handlers.
+    setupZoom: ->
+      @xScale = d3.scale.linear().domain([0,@width]).range([0,0])
+      @yScale = d3.scale.linear().domain([0,@height]).range([0,0])
+      @zoomRange = d3.scale.linear()
+          .domain([@minScale, @maxScale])
+          .rangeRound([@minScale, @maxScale])
+          .clamp(true)
+          .nice()
+      @zoom = d3.behavior.zoom()
+          .x(@xScale)
+          .y(@yScale)
+          .scaleExtent([@minScale, @maxScale])
+          .on('zoom', (e) => @tickUpdate(e))
+
     # Track window size internally for force layout.
-    setupSize: (width, height) ->
-      @width = width
-      @height = height
+    setupSize: (width, height) -> [@width, @height] = [width, height]
 
     setupStartPositions: (queries) ->
       startPositions = {}    # Dict of node_id -> (x, y) tuple
@@ -346,7 +343,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
         .attr('id', (d,i) -> 'l' + i)
         .attr('class', (d) -> 'label ' + d.label_style || '')
         .append('text')
-        .attr('class', (d) -> 'label-text ' + (d.label_style or ''))
+        .attr('class', (d) -> 'label-text hidden ' + (d.label_style or ''))
         .attr('text-anchor', 'middle')
         .text((d) -> d.name)
       @total = @labels[0].length
@@ -368,7 +365,7 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
     isObscured: (d, i) ->
       for s, j in @selections
         d2 = s.datum()
-        if (j isnt i) and (true is d2.isVisible) and
+        if (j isnt i) and d2.isVisible and
            NetX.boxCollision(d.label_bounds, d2.label_bounds)
           return true
       false
@@ -399,13 +396,14 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
         .attr 'transform', (d) =>
           return if not d? or not d.label_bounds?
           voffset = d.y
-          if (undefined is d.short_description or '' is d.short_description)
-            voffset += (d.label_bounds.bottom - d.label_bounds.top) *
-                      0.3 * invertScale
-          else
-            voffset += Graph.prototype.getRadiusForNode(d) +
-                      (d.label_bounds.bottom - d.label_bounds.top) * 0.9
-          'translate(' + d.x + ',' + voffset * invertScale + ')' +
+          # if (undefined is d.short_description or '' is d.short_description)
+            # voffset += (d.label_bounds.bottom - d.label_bounds.top) * 0.3
+                      # 0.3 * invertScale
+          # else
+          voffset += Graph.prototype.getRadiusForNode(d) + 10
+                      # (d.label_bounds.bottom - d.label_bounds.top)) * 0.9 *
+                      # invertScale
+          'translate(' + d.x + ',' + voffset + ')' +
           'scale(' + invertScale + ')'
 
 
@@ -580,8 +578,6 @@ define ['domReady', 'd3', 'jquery', 'modernizr', 'backbone', 'underscore'], (
   graph = null
   $ ->
     graph = renderVisualization VIS_ID
-    # window.getStateQuery = () -> graph.getStateQuery()
-    # window.renderVisualization = renderVisualization
     popup = new Popup()
     ESCAPE_KEY_CODE = 27
 

@@ -126,7 +126,6 @@ def getLog(request, vis_id):
   latest_log = ErrorLog.query(ErrorLog.vis == vis.key).order(-ErrorLog.modified).get()
   if latest_log and latest_log.modified >= vis.modified:
     error_log = latest_log.json_log
-  # log = ErrorLog.get_by_id(vis)
   return render(request, 'log.html', {
       'error_log': error_log })
 

@@ -84,35 +84,29 @@ g.node {
 }
 
 .node-circle {
-  fill: #CCC;
-  stroke: #999;
-  stroke-width: 1.5px;
+  fill: #ddd;
+  stroke: #555;
+  stroke-width: 0.5px;
   position: absolute; z-index: 30;
+  -webkit-transition: all 0.2s;
+  -moz-transition: all 0.2s;
+  -o-transition: all 0.2s;
 }
 .node-circle.fixed {
   stroke: #000;
   stroke-width: 1px;
-  stroke-dasharray: 1 1;
   -webkit-filter: drop-shadow( 0 0 5px #000 );
           filter: drop-shadow( -5px -5px 5px #000 );
 }
-
-.hovered-node {
-  stroke-width:2px;
-  stroke:#F00;
-}
+/*
 #hover-node circle {
   stroke-width:2px;
   stroke:#F00;
   fill: none;
-}
+} */
 circle:hover, .hovered-node circle, .drag-node circle {
-  stroke: #666;
-  stroke-width: 3px;
-  -webkit-transition: all 0.2s;
-  -moz-transition: all 0.2s;
-  -o-transition: all 0.2s;
-  z-index: -1;
+  stroke-width: 2px; z-index: -1;
+  box-shadow: 1px 1px #888;
 }
 
 /* Labels */

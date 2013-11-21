@@ -315,6 +315,7 @@ input[type=checkbox]:checked::after, .fakecheckbox.checked::after {
 .action:hover, .action:active { opacity: 0.9; }
 #btn-back { background-image: url('gfx/back_arrow.png'); }
 #btn-refresh { background-image: url('gfx/refresh.svg'); }
+#btn-error-log { background-image: url('gfx/errors.png'); }
 #btn-edit { background-image: url('gfx/settings.svg'); }
 #btn-embed { background-image: url('gfx/share.png'); }
 #btn-save-positions { background-image: url('gfx/save.png'); }
