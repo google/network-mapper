@@ -74,7 +74,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
           console.warn 'No pending DOM entry provided...'
           return false
         $pending.attr('id', 'v-' + id)
-        $pending.append '<div class="vis-entry-name">' + vis.name + '</div>'
+        $pending.html vis.name
         vis.entry = $pending
         hookVisEntry vis
 
@@ -217,7 +217,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
       gButter.showPersist('Creating new visualization "' + name  + '"...')
       console.log 'New Visualization [' + name + ']  ......'
       # Create placeholder DOM element.
-      @$create.before '<div id="pending" class="vis-entry"></div>'
+      @$create.after '<div id="pending" class="vis-entry">creating...</div>'
       @view.visIndex.show()
       gActions.hide()
       true
@@ -244,7 +244,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         newName = @$nameInput.val()
         # Update local data model and DOM.
         vis.name = newName
-        vis.entry.find('.vis-entry-name').html newName
+        vis.entry.html newName
         vis.url = newSpreadsheet
         vis.isPublic = @$publicInput.checked
         @view.$name.html newName
@@ -404,6 +404,7 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
   # URL. Defaults to false, for when the user manually selects from the index.
   viewVisualization = (vis, automatic=false) ->
     vis.entry.addClass 'selected'
+    gIndex.hide()
     gActions.show()
     console.log('showing', vis)
     gView.show(vis.id)
@@ -420,7 +421,28 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         returnToIndex()
 
   # Installs the click handler on a visualization entry in the index.
-  hookVisEntry = (vis) -> vis.entry.click => viewVisualization vis
+  hookVisEntry = (vis) ->
+    vis.entry.click (e) =>
+      e.preventDefault()
+      viewVisualization vis
+    vis.entry.hover (=> showThumb vis), (=> hideThumb vis)
+
+  $thumb = $ '#vis-thumb'
+  setThumb = (img) ->
+    $thumb.css 'background-image', 'url(' + img + ')'
+    $thumb.show()
+
+  showThumb = (vis) ->
+    if vis.thumb?
+      setThumb(vis.thumb)
+      return true
+    $.get 'thumbs/' + vis.id, (img) =>
+      return false if not img? or 'None' == img
+      vis.thumb = img
+      setThumb img
+
+  hideThumb = (vis) ->
+    $thumb.hide()
 
   getCurrentVisualization = -> gIndex.visByID[gView.currentID]
 
@@ -465,7 +487,8 @@ define ['domReady', 'jquery', 'underscore'], (domReady, $, _) ->
         returnToIndex()
 
     # Clicking 'Create Visualization' opens up a fresh visualization view.
-    gForm.$create.click () ->
+    gForm.$create.click (e) ->
+      e.preventDefault()
       gIndex.hide()
       gForm.clearForm()
       gForm.show()

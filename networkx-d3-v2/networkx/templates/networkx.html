@@ -51,19 +51,26 @@ will remain outside the IFRAME in the scope of this UI.
 
 {# List of all visualizations as a clickable entry. #}
 <div id="vis-index" style="display: none">
+  <button id="btn-create" class="btn">Create Visualization</button>
   {% if index %}{% for vis in index %}
   <div id="v-{{ vis.id }}"
-       class="vis-entry
+       class="vis-entry">
+       {% comment %}
        {% if vis_id and vis_id == vis.id %}selected{% endif%}"
        {% if vis.thumbnail %}
        style="background-image: url('{{ vis.thumbnail }}')"
        {% endif %}>
-    <div class="vis-entry-name">
-      {{ vis.name }}
-    </div>
+       {% endcomment %}
+    {{ vis.name }}
   </div>
   {% endfor %}{% endif %}
-  <a id="btn-create" class="vis-entry create">+</a>
+</div>
+
+<div id="vis-deets">
+  <div id="vis-thumb" style="display:none"></div>
+  <p>
+  {# Put descriptive text in here. #}
+  </p>
 </div>
 
 <div id="vis-form-panel" style="display:none" class="hidden">

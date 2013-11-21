@@ -168,4 +168,5 @@ def _JSONifyIndex(index):
         vis['name'],
         vis['spreadsheet_id'],
         vis['is_public'],
-        vis['thumbnail']) for vis in index])
+        # vis['thumbnail']
+      ) for vis in index])
