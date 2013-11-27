@@ -12,7 +12,7 @@ There are more dependencies included inside `lib` folder.
 ## OAuth2 Settings
 
 Network Mapper uses [OAuth2](http://en.wikipedia.org/wiki/OAuth#OAuth_2.0)
-to access data from a Google spreadsheet. You'll need to register your application with the APIs Console and generate `client_id` and `client_secret` keys. See [Using OAuth 2.0 to Access Google APIs](https://developers.google.com/accounts/docs/OAuth2#basicsteps>)
+to access data from a Google spreadsheet. You'll need to register your application with the APIs Console and generate `client_id` and `client_secret` keys. See [Using OAuth 2.0 to Access Google APIs](https://developers.google.com/accounts/docs/OAuth2#basicsteps)
 
 Once you've generated those keys, add them to your your configuration file copied and filled out from the template in `networkx/conf/conf_template.py` (follow the instructions in the template).
 
@@ -29,9 +29,9 @@ And you will have your server running at http://localhost:8080
 ## Test suite
 
 For running the test suite included within this project, you'll need to install
-the python package `Mock <http://www.voidspace.org.uk/python/mock/>`_. There
+the python package [Mock](http://www.voidspace.org.uk/python/mock/). There
 are several options for installing it, but the easiest way is to use
-`easy_install`::
+`easy_install`:
 
     $ easy_install mock
 
