@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% comment %}
-This is the primary template file for the network x visualizer.
+This is the primary template file for network mapper.
 It's a 'single-page' UI which wraps the stand-alone vis viewer templates
 with administrative functionality.
 {% endcomment %}
@@ -17,7 +17,7 @@ with administrative functionality.
 
 {% block nav %}
 <div class="topbar">
-  <a class="title" href="/">Network Visualizer X</a>
+  <a class="title" href="/">Network Mapper</a>
   <span id="view-name">{{ vis.name }}</span>
   <span id="links">
     {% if google_user %}
@@ -120,14 +120,17 @@ will remain outside the IFRAME in the scope of this UI.
 {% else %}  {# no |google_user| #}
 
 <div class="intro">
-  <h2>What is Network Visualizer X?</h2>
+  <h2>What is Network Mapper?</h2>
   <div class="text small center">
-    <p>A tool that makes it simple for NGOs to
-    generate visualizations of networks of support.
-    It can also be used to create network viss for other types of data.</p>
-    <p>To get started, login with your google account.</p>
+    <p>A tool that makes it easy to generate visualizations that map networks. It  was deisigned to visually map networks of support, such as that used in the Syria Defection Tracker (http://www.aljazeera.com/indepth/interactive/syriadefections/). </p>
   </div>
-  <a class="btn red" href="{% url 'login' %}">Login</a>
+
+  <h2>How do I make a new visualisation?</h2>
+  <div class="text small center">
+    <p>To get started login with your Google account:
+    </p>
+    <a class="btn red" href="{% url 'login' %}">login</a>
+  </div>
 </div>
 
 {% endif %}  {# end |google_user| #}
