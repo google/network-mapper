@@ -1,0 +1,2 @@
+For running locally, i.e. on localhost (not on appspot or a corperate
+appengine), make a copy of the conf_template.py from the parent directory into this directory, and set the template's values. It will be used when running locally.

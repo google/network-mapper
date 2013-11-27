@@ -1,5 +1,5 @@
 application: networkxd3
-version: 5-0-3
+version: 5-0-4
 runtime: python27
 api_version: 1
 threadsafe: true
