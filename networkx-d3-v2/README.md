@@ -14,10 +14,7 @@ There are more dependencies included inside `lib` folder.
 Network Mapper uses [OAuth2](http://en.wikipedia.org/wiki/OAuth#OAuth_2.0)
 to access data from a Google spreadsheet. You'll need to register your application with the APIs Console and generate `client_id` and `client_secret` keys. See [Using OAuth 2.0 to Access Google APIs](https://developers.google.com/accounts/docs/OAuth2#basicsteps>)
 
-Once you've generated those keys, add them into `networkx/conf/dev.py` (copied from `networkx/conf/dev_template.py`):
-
-    OAUTH_SETTINGS['client_id'] = 'your_client_id'
-    OAUTH_SETTINGS['client_secret'] = 'your_client_secret'
+Once you've generated those keys, add them to your your configuration file copied and filled out from the template in `networkx/conf/conf_template.py` (follow the instructions in the template).
 
 
 ## Running the AppEngine server locally
