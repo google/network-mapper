@@ -21,9 +21,9 @@ with administrative functionality.
   <span id="view-name">{{ vis.name }}</span>
   <span id="links">
     {% if google_user %}
-      <span class="navbar-text">{{ google_user.email }}</span> |
-      <a href="{% url 'oauth2logout' %}">Logout</a> |
-      <a id="link-help" href="/help">Help</a>
+      You are logged in as <span class="navbar-text">{{ google_user.email }}</span> |
+      <a id="link-help" href="/help">Help</a> |
+      <a href="{% url 'oauth2logout' %}">Logout</a>
     {% endif %}
   </span>
 </div>
@@ -122,15 +122,11 @@ will remain outside the IFRAME in the scope of this UI.
 <div class="intro">
   <h2>What is Network Mapper?</h2>
   <div class="text small center">
-    <p>A tool that makes it easy to generate visualizations that map networks. It  was deisigned to visually map networks of support, such as that used in the Syria Defection Tracker (http://www.aljazeera.com/indepth/interactive/syriadefections/). </p>
-  </div>
-
-  <h2>How do I make a new visualisation?</h2>
-  <div class="text small center">
-    <p>To get started login with your Google account:
+    <p>Network Mapper is a tool to generate network-style visualizations from <a href="">Google Spreadsheets</a>. For example, an earlier version was used by Al-Jazeera in the <a href="http://www.aljazeera.com/indepth/interactive/syriadefections/">Syria Defection Tracker</a>. This is a tool to map the defections in the Syrian civil war. </p>
+    <p>To get started login and make your own visualisation you need to login:
     </p>
-    <a class="btn red" href="{% url 'login' %}">login</a>
   </div>
+  <a class="btn red" href="{% url 'login' %}">login</a>
 </div>
 
 {% endif %}  {# end |google_user| #}

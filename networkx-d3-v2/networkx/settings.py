@@ -13,7 +13,7 @@ if on_production_server:
   full_application_id = get_application_id().lower()
 
   application_id_parts = full_application_id.split(':')
-  if application_id_parts.length == 0 || application_id_parts.length > 2:
+  if application_id_parts.length == 0 or application_id_parts.length > 2:
     raise Exception('application_id is not valid: it should be non-empty ' +
         'and contain at most one ":" character')
 
@@ -21,7 +21,7 @@ if on_production_server:
     # If no domain is specified, it is assumed to run on appspot
     domain = 'appspot'
     application_id = application_id_parts[0]
-  else if application_id_parts.length == 2:
+  elif application_id_parts.length == 2:
     domain = application_id_parts[0]
     application_id = application_id_parts[1]
 
