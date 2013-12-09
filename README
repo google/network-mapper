@@ -1,7 +1,0 @@
-This is a collection of tools for visualizing networks of support. For example,
-a live version used by Al-Jazeera to track defections from the Syrian regmine to
-the revolutionary opposition that started in 2009 is available here:
-http://www.aljazeera.com/indepth/interactive/syriadefections/
-
-The subdirectory 'networkx-d3-v2' contains the current (in development) version
-that uses D3 to visualise the network graph.

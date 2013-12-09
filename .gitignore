@@ -8,4 +8,5 @@
 *.bak
 networkx-d3-v2/networkx/conf/google
 networkx-d3-v2/networkx/conf/dev.py
+networkx-d3-v2/conf/*/*.py
 .DS_Store

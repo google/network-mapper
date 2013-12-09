@@ -6,7 +6,7 @@ sys.path.extend(['lib'])
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 os.environ['APPENGINE_PRODUCTION'] = \
-    os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine') or\
+    os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine') or \
     os.getenv('SETTINGS_MODE') == 'prod'
 
 import django
