@@ -29,9 +29,10 @@ if on_production_server:
 
 # Execute the path to the environment setting file
 if not os.path.exists(settings_path):
-  logging.error('Settings file named "%s" does not exist ' +
-      '(application_id is %s)' % \
-      (settings_path, application_id))
+  logging.error('Settings file named "%s" does not exist ' # +
+      # '(application_id is %s)' % \
+      % settings_path)
+        # full_application_id))
   exit(1)
 else:
   logging.info('settings_path is %s' % settings_path)
