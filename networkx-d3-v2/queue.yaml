@@ -1,7 +1,0 @@
-queue:
-- name: default
-  rate: 50/s
-
-- name: sync-spreadsheets
-  rate: 10/s
-  max_concurrent_requests: 3
